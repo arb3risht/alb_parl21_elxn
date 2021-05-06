@@ -4,7 +4,8 @@
 # Full license terms at https://creativecommons.org/licenses/by-sa/4.0/.
 
 # Execute normality tests & related plots
-NormTestsWithVisuals <- function(vecData, lblData) {
+# for continuous (isDiscrete = 0) or discrete data
+NormTestsWithVisuals <- function(vecData, lblData, isDiscrete) {
   # Density chart
   grDensity <- ggdensity(vecData, 
             main = paste("Density plot of " , lblData , " Votes"),
@@ -65,24 +66,34 @@ NormTestsWithVisuals <- function(vecData, lblData) {
     ggtitle(paste("K-S Normality Test: ", lblData)) +
     theme(legend.title=element_blank(), legend.position = "bottom")
   
-  # Run the default KS test
-  resultKS <- ks.test(vecData, "pnorm", mean(vecData), sd(vecData))
-  
-  # Run the Lilliefors normality test
-  resultKSL <- LillieTest(vecData) 
+  resultKS <- vector(mode = "numeric", length = length(vecData))
+  resultKSL <- vector(mode = "numeric", length = length(vecData))
+  if (isDiscrete == 0) { # continuous distributions
+    # Run the default KS test
+    resultKS <- ks.test(vecData, "pnorm", mean(vecData), sd(vecData))
+    
+    # Run the Lilliefors normality test
+    resultKSL <- LillieTest(vecData) 
+    
+  } else { # discrete distributions
+    # Run the ks.boot function from lib Matching for the discrete KS test
+    resultKS <- ks.boot(vecData, pnorm(length(vecData)), nboots = 1000, 
+                        alternative = "two.sided")
+  }
   
   # Run the Shapiro normality test
   resultShap <- shapiro.test(vecData)
   
   # Save results in a return list
+  # NB: if discrete, resultKSL returns an empty vector
   results <- list(grDensity, grQQ, grKS, resultKS, resultKSL, resultShap)
   
   return(results)
 }
 
-# Execute two-sample discrete K-S test & related plots
+# Execute two-sample discrete K-S test & related plots for Benford's Law
 # sample1 - vector of integers
-DiscreteTwoSampleKSTestWithVisuals <- function(sample1, lblData) {
+DiscreteBenfordKSTestWithVisuals <- function(sample1, lblData) {
   
   sample1 <- ExtractLeadingDigitVector(sample1)
   
@@ -174,4 +185,31 @@ ExtractLeadingDigitVector <- function(vecData) {
   }
 
   return(vecLeading)
+}
+
+# Check for possible distribution candidates for a given vector
+FitOtherDistributions <- function(vecData, lblData, isDiscrete) {
+  datPlots <- descdist(vecData, discrete = isDiscrete)
+  dtlognorm <- fitdist(vecData, distr = "lnorm")
+  dtnorm <- fitdist(vecData, distr = "norm")
+  dtweibull <- fitdist(vecData, distr = "weibull")
+  plot(dtlognorm)
+  plot(dtnorm)
+  plot(dtweibull) # fits the closest, judging from the Q-Q plot
+  
+  # Check best fit using Akaike values
+  bestFitAIC <- min(dtlognorm$aic, dtnorm$aic, dtweibull$aic)
+  fittest <- dtweibull
+  if (dtlognorm$aic < dtnorm$aic & dtlognorm$aic < dtweibull$aic) {
+    fittest <- dtlognorm
+  }
+  else if (dtnorm$aic < dtweibull$aic & dtnorm$aic < dtlognorm$aic  ) {
+    fittest <- dtnorm
+  } else {
+    fittest <- dtweibull
+  }
+  
+  results <- list(datPlots, fittest, bestFitAIC)
+  
+  return (results)
 }

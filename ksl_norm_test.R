@@ -5,7 +5,6 @@
 
 # Output files
 
-
 # Normality Tests based on the empirical probabilities of:
 # 1. Parties (PS, PD, Other Parties)
 # 2. Relative turnout
@@ -15,9 +14,9 @@
 # each of pPS, pPD, pOP.
 # ----
 # PS
-resultPS <- NormTestsWithVisuals(partyVotesP$pPS, "PS")
-# Print results - graph and text - in files
+resultPS <- NormTestsWithVisuals(partyVotesP$pPS, "PS", 0)
 
+# Print results - graph and text - in files
 resultPS[[1]]
 resultPS[[2]]
 resultPS[[3]]
@@ -28,9 +27,9 @@ resultPS[[6]]
 # ----
 # PD
 # First, some visuals
-resultPD <- NormTestsWithVisuals(partyVotesP$pPD, "PD")
-# Print results - graph and text - in files
+resultPD <- NormTestsWithVisuals(partyVotesP$pPD, "PD", 0)
 
+# Print results - graph and text - in files
 resultPD[[1]]
 resultPD[[2]]
 resultPD[[3]]
@@ -40,9 +39,9 @@ resultPD[[6]]
 
 # ----
 # Other Parties
-resultOP <- NormTestsWithVisuals(partyVotesP$pOP, "Other Parties")
-# Print results - graph and text - in files
+resultOP <- NormTestsWithVisuals(partyVotesP$pOP, "Other Parties", 0)
 
+# Print results - graph and text - in files
 resultOP[[1]]
 resultOP[[2]]
 resultOP[[3]]
@@ -52,9 +51,9 @@ resultOP[[6]]
 
 # ----
 # Turnout
-resultTurnout <- NormTestsWithVisuals(partyVotesP$pTurnout, "Turnout")
-# Print results - graph and text - in files
+resultTurnout <- NormTestsWithVisuals(partyVotesP$pTurnout, "Turnout", 0)
 
+# Print results - graph and text - in files
 resultTurnout[[1]]
 resultTurnout[[2]]
 resultTurnout[[3]]
@@ -64,9 +63,10 @@ resultTurnout[[6]]
 
 # ----
 # Turnout
-resultInvalid <- NormTestsWithVisuals(partyVotesP$pInvalid, "Invalid Ballots")
-# Print results - graph and text - in files
+resultInvalid <- NormTestsWithVisuals(partyVotesP$pInvalid, 
+                                      "Invalid Ballots", 0)
 
+# Print results - graph and text - in files
 resultInvalid[[1]]
 resultInvalid[[2]]
 resultInvalid[[3]]
@@ -86,9 +86,9 @@ resultInvalid[[6]]
 # each of pPS, pPD, pOP.
 # ----
 # PS
-resultPS <- NormTestsWithVisuals(votesGroupedByMunicipality$pPS, "PS")
-# Print results - graph and text - in files
+resultPS <- NormTestsWithVisuals(votesGroupedByMunicipality$pPS, "PS", 0)
 
+# Print results - graph and text - in files
 resultPS[[1]]
 resultPS[[2]]
 resultPS[[3]]
@@ -99,9 +99,9 @@ resultPS[[6]]
 # ----
 # PD
 # First, some visuals
-resultPD <- NormTestsWithVisuals(votesGroupedByMunicipality$pPD, "PD")
-# Print results - graph and text - in files
+resultPD <- NormTestsWithVisuals(votesGroupedByMunicipality$pPD, "PD", 0)
 
+# Print results - graph and text - in files
 resultPD[[1]]
 resultPD[[2]]
 resultPD[[3]]
@@ -112,9 +112,9 @@ resultPD[[6]]
 # ----
 # Other Parties
 resultOP <- NormTestsWithVisuals(votesGroupedByMunicipality$pOP, 
-                                 "Other Parties")
-# Print results - graph and text - in files
+                                 "Other Parties", 0)
 
+# Print results - graph and text - in files
 resultOP[[1]]
 resultOP[[2]]
 resultOP[[3]]
@@ -125,9 +125,9 @@ resultOP[[6]]
 # ----
 # Turnout
 resultTurnout <- NormTestsWithVisuals(votesGroupedByMunicipality$pTurnout, 
-                                      "Turnout")
-# Print results - graph and text - in files
+                                      "Turnout", 0)
 
+# Print results - graph and text - in files
 resultTurnout[[1]]
 resultTurnout[[2]]
 resultTurnout[[3]]
@@ -138,9 +138,9 @@ resultTurnout[[6]]
 # ----
 # Turnout
 resultInvalid <- NormTestsWithVisuals(votesGroupedByMunicipality$pInvalid, 
-                                      "Invalid Ballots")
-# Print results - graph and text - in files
+                                      "Invalid Ballots", 0)
 
+# Print results - graph and text - in files
 resultInvalid[[1]]
 resultInvalid[[2]]
 resultInvalid[[3]]
@@ -149,4 +149,75 @@ resultInvalid[[5]]
 resultInvalid[[6]]
 
 # END NORMALITY TEST at MUNICIPALITY LEVEL
+
+# ----
+# We have assumed normal distribution based on the i.i.d. assumption of
+# party vote percentage set. Below, we analyze what possible other
+# distributions could best fit the various data sets:
+
+# PS - fits Weibull
+resultPS <- FitOtherDistributions(partyVotesP$pPS, "PS", FALSE)
+resultPS[1]
+resultPS[2]
+resultPS[3]
+
+# PD - fits normal
+resultPD <- FitOtherDistributions(partyVotesP$pPD, "PD", FALSE)
+resultPD[1]
+resultPD[2]
+resultPD[3]
+
+# Other Parties -  fits Weibull
+resultOP <- FitOtherDistributions(partyVotesP$pOP, "Other Parties", FALSE)
+resultOP[1]
+resultOP[2]
+resultOP[3]
+
+# Turnout - fits Weibull
+resultTurnout <- FitOtherDistributions(partyVotesP$pTurnout, "Turnout", FALSE)
+resultTurnout[1]
+resultTurnout[2]
+resultTurnout[3]
+
+# Invalid Ballots - fits Normal
+resultInvalid <- FitOtherDistributions(partyVotesP$pInvalid, 
+                                       "Invalid Ballots", FALSE)
+resultInvalid[1]
+resultInvalid[2]
+resultInvalid[3]
+
+# Repeat fittings above by municipality
+# ----
+# PS - fits Weibull
+resultPS <- FitOtherDistributions(votesGroupedByMunicipality$pPS, "PS", FALSE)
+resultPS[1]
+resultPS[2]
+resultPS[3]
+
+# PD - fits normal
+resultPD <- FitOtherDistributions(votesGroupedByMunicipality$pPD, "PD", FALSE)
+resultPD[1]
+resultPD[2]
+resultPD[3]
+
+# Other Parties -  fits Weibull
+resultOP <- FitOtherDistributions(votesGroupedByMunicipality$pOP, 
+                                  "Other Parties", FALSE)
+resultOP[1]
+resultOP[2]
+resultOP[3]
+
+# Turnout - fits Weibull
+resultTurnout <- FitOtherDistributions(votesGroupedByMunicipality$pTurnout, 
+                                       "Turnout", FALSE)
+resultTurnout[1]
+resultTurnout[2]
+resultTurnout[3]
+
+# Invalid Ballots - fits Normal
+resultInvalid <- FitOtherDistributions(votesGroupedByMunicipality$pInvalid, 
+                                       "Invalid Ballots", FALSE)
+resultInvalid[1]
+resultInvalid[2]
+resultInvalid[3]
 

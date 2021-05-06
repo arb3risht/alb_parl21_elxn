@@ -81,21 +81,21 @@ view(suspectsIB)
 # Testing Benford's Law w/ K-S:
 # ----
 # PS
-benfordPS <- DiscreteTwoSampleKSTestWithVisuals(partyVotes$PS, "PS")
+benfordPS <- DiscreteBenfordKSTestWithVisuals(partyVotes$PS, "PS")
 # Print results - graph and text - in files
 
 benfordPS[[1]]
 benfordPS[[2]]
 
 # PD
-benfordPD <- DiscreteTwoSampleKSTestWithVisuals(partyVotes$PD, "PD")
+benfordPD <- DiscreteBenfordKSTestWithVisuals(partyVotes$PD, "PD")
 # Print results - graph and text - in files
 
 benfordPD[[1]]
 benfordPD[[2]]
 
 # OP
-benfordOP <- DiscreteTwoSampleKSTestWithVisuals(partyVotes$`Other Parties`, 
+benfordOP <- DiscreteBenfordKSTestWithVisuals(partyVotes$`Other Parties`, 
                                                 "Other Parties")
 # Print results - graph and text - in files
 
@@ -103,7 +103,7 @@ benfordOP[[1]]
 benfordOP[[2]]
 
 # IB
-benfordIB <- DiscreteTwoSampleKSTestWithVisuals(partyVotes$`Invalid Ballots`, 
+benfordIB <- DiscreteBenfordKSTestWithVisuals(partyVotes$`Invalid Ballots`, 
                                                 "Invalid Ballots")
 # Print results - graph and text - in files
 

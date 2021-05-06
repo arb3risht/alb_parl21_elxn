@@ -21,7 +21,7 @@ partyVotesRaw <- within(partyVotesRaw,
                         + `Invalid Ballots`)
 # Add turnout counts as Eligible Voters - Total Votes
 partyVotesRaw <- within(partyVotesRaw, 
-                        Turnout <- `Eligible Voters` - TotalVotes)
+                        Turnout <- TotalVotes / `Eligible Voters`)
 
 # Combine LSI + Other Parties into one vector due to their relative
 # insignificance to PS and PD - the two major parties
@@ -62,7 +62,7 @@ partyVotesP <- data.frame(partyVotes$District,
                           partyVotes$`Eligible Voters`,
                           partyVotes$`Total Eligible Votes`,
                           partyVotes$`Total Votes`,
-                          partyVotes$Turnout / partyVotes$`Eligible Voters`)
+                          partyVotes$Turnout)
 names(partyVotesP) <- c("District", "Municipality", "Administrative Unit", "pPS", 
                        "pPD", "pOP", "pInvalid", 
                        "Eligible Voters", "Total Eligible Votes", 
@@ -79,7 +79,7 @@ votesGroupedByDistrict <- partyVotes %>% group_by(District) %>%
             `Eligible Voters` = sum(`Eligible Voters`),
             `Total Eligible Votes` = sum(`Total Eligible Votes`),
             `Total Votes` = sum(`Total Votes`), 
-            Turnout = sum(Turnout))
+            Turnout = sum(`Total Votes`) / sum(`Eligible Voters`))
 # Add some computed empirical probabilities:
 votesGroupedByDistrict <- within(votesGroupedByDistrict, 
                                  pPS <- PS / `Total Eligible Votes`)
@@ -92,8 +92,7 @@ votesGroupedByDistrict <- within(votesGroupedByDistrict,
                                  pInvalid <- `Invalid Ballots` 
                                  / `Total Eligible Votes`)
 votesGroupedByDistrict <- within(votesGroupedByDistrict,
-                                 pTurnout <- Turnout 
-                                 / `Eligible Voters`)
+                                 pTurnout <- Turnout)
 # Print the district-level data set for later reference
 write_csv(votesGroupedByDistrict, partyVotesByDistrictFile, na = "NA", 
           append = FALSE)
@@ -107,6 +106,12 @@ maxTurnout <- votesGroupedByDistrict[which(votesGroupedByDistrict$pTurnout ==
                                max(votesGroupedByDistrict$pTurnout)), ]
 view(minTurnout)
 view(maxTurnout)
+
+# Election turnout
+eTurnout <- sum(partyVotes$`Total Votes`) / 
+            sum(partyVotes$`Eligible Voters`)
+eTurnout
+
 # ----
 # Largest and smallest relative invalid ballot proportions were in districts:
 minInvalid <- votesGroupedByDistrict[which(votesGroupedByDistrict$pInvalid == 
@@ -121,48 +126,6 @@ view(minInvalid)
 view(maxInvalid)
 totalInvalidBallots
 pInvalidBallots
-
-# Is the observed ~5% invalid ballot unusual, given prior election results?
-# Let's test the hypotheses:
-#   H_0: We expect around 2.5% invalid ballots
-#        (The observed 5% invalid ballot proportion is not unusual.)
-#   H_A: We got more than 2.5% invalid ballots
-#        (The observed 5% invalid ballot proportion is unusual, given 
-#        previous elections' results averaging at ~2.5%.)
-# Since invalid ballots were normally distributed at 95% conf. level, we can
-# use the z-scores to test the hypotheses above. Let b denote the proportion
-# of invalid ballots. Then, if [1 - P(b < 5%)] <= p-value of 5%, we reject H_0
-# in favor of H_A. This is a dichotomous experiment with p_success & failure, 
-# where p_success = expected, i.e. our historical control proportion.
-
-# We expect 2.5% invalid ballots based on prior elections
-expected <- 0.025
-
-# standard deviation of sample proportion
-stdev <- sqrt(expected * (1-expected) / length(partyVotesP$pInvalid))
-
-# verify the sample is large enough to warrant use of normal distribution
-# by confirming that the following interval is within [0, 1]
-paste("[", expected - 3*stdev, expected + 3*stdev, "]")
-
-# z-score
-z <- (pInvalidBallots - expected) / stdev
-  
-# P(b >= z) = 1 - P(b < z):
-pValue <- 1 - pnorm(z, mean = 0, sd = 1, lower.tail = TRUE)
-pValue
-
-# confidence interval @95%
-lInt <- expected - 1.96*sqrt(expected*(1-expected)/length(partyVotesP$pInvalid))
-rInt <- expected + 1.96*sqrt(expected*(1-expected)/length(partyVotesP$pInvalid))
-paste("C.I at 95%: (", lInt, ", ", rInt, 
-      "); Observed invalid ballots:", pInvalidBallots)
-if (pInvalidBallots < lInt | pInvalidBallots > rInt) {
-  paste("Reject H_0 in favor of H_A")
-} else {
-  paste("Failed to Reject H_0")
-}
-
 # ----
 
 # Group aggregated votes by municipality to look at that level
@@ -172,7 +135,7 @@ votesGroupedByMunicipality <- partyVotes %>% group_by(Municipality) %>%
             `Eligible Voters` = sum(`Eligible Voters`),
             `Total Eligible Votes` = sum(`Total Eligible Votes`),
             `Total Votes` = sum(`Total Votes`), 
-            Turnout = sum(Turnout))
+            Turnout = sum(`Total Votes`) / sum(`Eligible Voters`))
 # Add some computed empirical probabilities:
 votesGroupedByMunicipality <- within(votesGroupedByMunicipality, 
                                  pPS <- PS / `Total Eligible Votes`)
@@ -185,8 +148,7 @@ votesGroupedByMunicipality <- within(votesGroupedByMunicipality,
                                  pInvalid <- `Invalid Ballots` 
                                  / `Total Eligible Votes`)
 votesGroupedByMunicipality <- within(votesGroupedByMunicipality,
-                                 pTurnout <- Turnout 
-                                 / `Eligible Voters`)
+                                 pTurnout <- Turnout)
 
 view(votesGroupedByMunicipality)
 # Print the municipality-level data set for later reference
