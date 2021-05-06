@@ -38,6 +38,19 @@ resultPD[[5]]
 resultPD[[6]]
 
 # ----
+# Share PS/PD
+resultPSPD <- NormTestsWithVisuals(partyVotesP$pPSPD, "PS/PD", 0)
+
+# Print results - graph and text - in files
+resultPSPD[[1]]
+resultPSPD[[2]]
+resultPSPD[[3]]
+resultPSPD[[4]]
+resultPSPD[[5]]
+resultPSPD[[6]]
+
+
+# ----
 # Other Parties
 resultOP <- NormTestsWithVisuals(partyVotesP$pOP, "Other Parties", 0)
 
@@ -157,67 +170,51 @@ resultInvalid[[6]]
 
 # PS - fits Weibull
 resultPS <- FitOtherDistributions(partyVotesP$pPS, "PS", FALSE)
-resultPS[1]
-resultPS[2]
-resultPS[3]
+resultPS
 
 # PD - fits normal
 resultPD <- FitOtherDistributions(partyVotesP$pPD, "PD", FALSE)
-resultPD[1]
-resultPD[2]
-resultPD[3]
+resultPD
 
-# Other Parties -  fits Weibull
+# Share PS/PD - fits normal
+resultPSPD <- FitOtherDistributions(partyVotesP$pPSPD, "PS/PD", FALSE)
+resultPSPD
+
+# Other Parties -  fits beta
 resultOP <- FitOtherDistributions(partyVotesP$pOP, "Other Parties", FALSE)
-resultOP[1]
-resultOP[2]
-resultOP[3]
+resultOP
 
 # Turnout - fits Weibull
 resultTurnout <- FitOtherDistributions(partyVotesP$pTurnout, "Turnout", FALSE)
-resultTurnout[1]
-resultTurnout[2]
-resultTurnout[3]
+resultTurnout
 
 # Invalid Ballots - fits Normal
 resultInvalid <- FitOtherDistributions(partyVotesP$pInvalid, 
                                        "Invalid Ballots", FALSE)
-resultInvalid[1]
-resultInvalid[2]
-resultInvalid[3]
+resultInvalid
 
 # Repeat fittings above by municipality
 # ----
 # PS - fits Weibull
 resultPS <- FitOtherDistributions(votesGroupedByMunicipality$pPS, "PS", FALSE)
-resultPS[1]
-resultPS[2]
-resultPS[3]
+resultPS
 
 # PD - fits normal
 resultPD <- FitOtherDistributions(votesGroupedByMunicipality$pPD, "PD", FALSE)
-resultPD[1]
-resultPD[2]
-resultPD[3]
+resultPD
 
-# Other Parties -  fits Weibull
+# Other Parties -  fits beta
 resultOP <- FitOtherDistributions(votesGroupedByMunicipality$pOP, 
                                   "Other Parties", FALSE)
-resultOP[1]
-resultOP[2]
-resultOP[3]
+resultOP
 
 # Turnout - fits Weibull
 resultTurnout <- FitOtherDistributions(votesGroupedByMunicipality$pTurnout, 
                                        "Turnout", FALSE)
-resultTurnout[1]
-resultTurnout[2]
-resultTurnout[3]
+resultTurnout
 
 # Invalid Ballots - fits Normal
 resultInvalid <- FitOtherDistributions(votesGroupedByMunicipality$pInvalid, 
                                        "Invalid Ballots", FALSE)
-resultInvalid[1]
-resultInvalid[2]
-resultInvalid[3]
+resultInvalid
 

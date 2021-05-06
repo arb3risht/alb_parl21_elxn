@@ -4,9 +4,10 @@
 # Full license terms at https://creativecommons.org/licenses/by-sa/4.0/.
 
 # Output file locations
+partyVotesRawByAdminUnit <- "out/party_votes_raw_admin_unit.csv"
 partyVotesByAdminUnit <- "out/party_votes_admin_unit.csv"
 partyVotePByAdminUnit <- "out/party_votes_p_admin_unit.csv"
-descripStatsFile <- "out/descript_stat"
+descripStatsFile <- "out/descript_stat.csv"
 partyVotesByDistrictFile <- "out/party_votes_by_district.csv"
 partyVotesByMunicipalityFile <- "out/party_votes_by_municipality.csv"
 
@@ -22,6 +23,8 @@ partyVotesRaw <- within(partyVotesRaw,
 # Add turnout counts as Eligible Voters - Total Votes
 partyVotesRaw <- within(partyVotesRaw, 
                         Turnout <- TotalVotes / `Eligible Voters`)
+# write the data set out
+write_csv(partyVotesRaw, partyVotesRawByAdminUnit, na = "NA", append = FALSE)
 
 # Combine LSI + Other Parties into one vector due to their relative
 # insignificance to PS and PD - the two major parties
@@ -55,6 +58,7 @@ partyVotesP <- data.frame(partyVotes$District,
                           partyVotes$`Administrative Unit`,
                           partyVotes$PS / partyVotes$`Total Eligible Votes`,
                           partyVotes$PD / partyVotes$`Total Eligible Votes`,
+                          partyVotes$PS / (partyVotes$PS + partyVotes$PD),
                           partyVotes$`Other Parties` / 
                             partyVotes$`Total Eligible Votes`,
                           partyVotes$`Invalid Ballots` / 
@@ -64,13 +68,53 @@ partyVotesP <- data.frame(partyVotes$District,
                           partyVotes$`Total Votes`,
                           partyVotes$Turnout)
 names(partyVotesP) <- c("District", "Municipality", "Administrative Unit", "pPS", 
-                       "pPD", "pOP", "pInvalid", 
+                       "pPD", "pPSPD", "pOP", "pInvalid", 
                        "Eligible Voters", "Total Eligible Votes", 
                        "Total Votes", "pTurnout")
 # write the data set out
 write_csv(partyVotesP, partyVotePByAdminUnit, na = "NA", append = FALSE)
 # Quick look at some stats
 summary(partyVotesP)
+
+# Plot densities of PS, PD, OP, Turnout, and Invalid:
+# in a 3x2 grid:
+par(mfrow = c(3, 2))
+
+# build a common x-axis range for the party plots
+xrange <- range(c(partyVotesP$pPS, partyVotesP$pPD, partyVotesP$pOP) )
+
+hist(partyVotesP$pPS, breaks = "FD", freq = FALSE, col = "orange", 
+     main = paste("Histogram of PS vote share"), xlim = xrange, 
+     xlab = "PS vote share")
+lines(density(partyVotesP$pPS), col = "navy")
+rug(partyVotesP$pPS, col = "gray")
+
+hist(partyVotesP$pTurnout, breaks = "FD", freq = FALSE, col = "green2", 
+     main = paste("Histogram of turnout rates"),
+     xlab = "Turnout rate")
+lines(density(partyVotesP$pTurnout), col = "navy")
+rug(partyVotesP$pTurnout, col = "gray")
+
+hist(partyVotesP$pPD, breaks = "FD", freq = FALSE, col = "orange", 
+     main = paste("Histogram of PD vote share"), xlim = xrange,
+     xlab = "PD vote share")
+lines(density(partyVotesP$pPD), col = "navy")
+rug(partyVotesP$pPD, col = "gray")
+
+hist(partyVotesP$pInvalid, breaks = "FD", freq = FALSE, col = "thistle1", 
+     main = paste("Histogram of invalid ballot rates"), 
+     xlab = "Invalid ballot rate")
+
+lines(density(partyVotesP$pInvalid), col = "navy")
+rug(partyVotesP$pInvalid, col = "gray")
+
+hist(partyVotesP$pOP, breaks = "FD", freq = FALSE, col = "orange", 
+     main = paste("Histogram of other parties' vote shares"),
+     xlim = xrange, xlab = "Other parties' vote share")
+lines(density(partyVotesP$pOP), col = "navy")
+rug(partyVotesP$pOP, col = "gray")
+
+
 
 # Group aggregated votes by district to look at the constituency level
 votesGroupedByDistrict <- partyVotes %>% group_by(District) %>% 
@@ -99,6 +143,48 @@ write_csv(votesGroupedByDistrict, partyVotesByDistrictFile, na = "NA",
 
 # Some insights
 # ----
+# Summary Table - create empty frame with two columns
+summaryTable <- data.frame(character(0), numeric(0))
+names(summaryTable) <- c("Data", "Result")
+
+# Add data results to the frame:
+newRow <- c("Eligible Voters", sum(partyVotes$`Eligible Voters`))
+summaryTable[nrow(summaryTable)+1, ] <- newRow
+newRow <- c("Total Votes Cast", sum(partyVotes$`Total Votes`))
+summaryTable[nrow(summaryTable)+1, ] <- newRow
+newRow <- c("Total Eligible Votes", sum(partyVotes$`Total Eligible Votes`))
+summaryTable[nrow(summaryTable)+1, ] <- newRow
+newRow <- c("Invalid Ballots", 1.0 - sum(partyVotes$`Total Eligible Votes`) / 
+              sum(partyVotes$`Total Votes`))       
+summaryTable[nrow(summaryTable)+1, ] <- newRow
+newRow <- c("Turnout", sum(partyVotes$`Total Votes`) / 
+              sum(partyVotes$`Eligible Voters`))
+summaryTable[nrow(summaryTable)+1, ] <- newRow
+newRow <- c("PS Tally", sum(partyVotes$PS)) 
+summaryTable[nrow(summaryTable)+1, ] <- newRow
+newRow <- c("PS %-age", sum(partyVotes$PS) / 
+              sum(partyVotes$`Total Eligible Votes`))
+summaryTable[nrow(summaryTable)+1, ] <- newRow
+newRow <- c("PS Seats", 74) 
+summaryTable[nrow(summaryTable)+1, ] <- newRow
+newRow <- c("PD Tally", sum(partyVotes$PD)) 
+summaryTable[nrow(summaryTable)+1, ] <- newRow
+newRow <- c("PD %-age", sum(partyVotes$PD) / 
+              sum(partyVotes$`Total Eligible Votes`))
+summaryTable[nrow(summaryTable)+1, ] <- newRow
+newRow <- c("PD Seats", 59) 
+summaryTable[nrow(summaryTable)+1, ] <- newRow
+newRow <- c("Other Parties Tally", sum(partyVotes$`Other Parties`)) 
+summaryTable[nrow(summaryTable)+1, ] <- newRow
+newRow <- c("Other Parties %-age", sum(partyVotes$`Other Parties`) / 
+              sum(partyVotes$`Total Eligible Votes`))
+summaryTable[nrow(summaryTable)+1, ] <- newRow
+newRow <- c("Other Parties Seats", 7) 
+summaryTable[nrow(summaryTable)+1, ] <- newRow
+
+view(summaryTable)
+write_csv(summaryTable, descripStatsFile, na = "NA", append = FALSE)
+# ----
 # Largest and smallest turnouts were in districts:
 minTurnout <- votesGroupedByDistrict[which(votesGroupedByDistrict$pTurnout == 
                                min(votesGroupedByDistrict$pTurnout)), ]
@@ -106,11 +192,6 @@ maxTurnout <- votesGroupedByDistrict[which(votesGroupedByDistrict$pTurnout ==
                                max(votesGroupedByDistrict$pTurnout)), ]
 view(minTurnout)
 view(maxTurnout)
-
-# Election turnout
-eTurnout <- sum(partyVotes$`Total Votes`) / 
-            sum(partyVotes$`Eligible Voters`)
-eTurnout
 
 # ----
 # Largest and smallest relative invalid ballot proportions were in districts:
@@ -150,7 +231,6 @@ votesGroupedByMunicipality <- within(votesGroupedByMunicipality,
 votesGroupedByMunicipality <- within(votesGroupedByMunicipality,
                                  pTurnout <- Turnout)
 
-view(votesGroupedByMunicipality)
 # Print the municipality-level data set for later reference
 write_csv(votesGroupedByMunicipality, partyVotesByMunicipalityFile, na = "NA", 
           append = FALSE)

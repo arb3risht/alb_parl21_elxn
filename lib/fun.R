@@ -193,23 +193,24 @@ FitOtherDistributions <- function(vecData, lblData, isDiscrete) {
   dtlognorm <- fitdist(vecData, distr = "lnorm")
   dtnorm <- fitdist(vecData, distr = "norm")
   dtweibull <- fitdist(vecData, distr = "weibull")
+  dtbeta <- fitdist(vecData, distr = "beta")
   plot(dtlognorm)
   plot(dtnorm)
-  plot(dtweibull) # fits the closest, judging from the Q-Q plot
+  plot(dtweibull)
+  plot(dtbeta)
+  
+  # find best fit
+  dtDistr <- list(dtlognorm, dtnorm, dtweibull, dtbeta)
   
   # Check best fit using Akaike values
-  bestFitAIC <- min(dtlognorm$aic, dtnorm$aic, dtweibull$aic)
-  fittest <- dtweibull
-  if (dtlognorm$aic < dtnorm$aic & dtlognorm$aic < dtweibull$aic) {
-    fittest <- dtlognorm
-  }
-  else if (dtnorm$aic < dtweibull$aic & dtnorm$aic < dtlognorm$aic  ) {
-    fittest <- dtnorm
-  } else {
-    fittest <- dtweibull
+  bestFit <- dtDistr[[1]]
+  for (i in 2:length(dtDistr)) {
+    if (dtDistr[[i]]$aic < bestFit$aic) {
+      bestFit <- dtDistr[[i]]
+    }
   }
   
-  results <- list(datPlots, fittest, bestFitAIC)
+  results <- list(datPlots, bestFit, bestFit$aic)
   
   return (results)
 }
