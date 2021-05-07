@@ -83,38 +83,45 @@ par(mfrow = c(3, 2))
 # build a common x-axis range for the party plots
 xrange <- range(c(partyVotesP$pPS, partyVotesP$pPD, partyVotesP$pOP) )
 
-hist(partyVotesP$pPS, breaks = "FD", freq = FALSE, col = "orange", 
+hist(partyVotesP$pPS, breaks = "FD", freq = FALSE, col = "orange",
      main = paste("Histogram of PS vote share"), xlim = xrange, 
      xlab = "PS vote share")
-lines(density(partyVotesP$pPS), col = "navy")
+lines(density(partyVotesP$pPS), col = "navy", lwd = 2)
 rug(partyVotesP$pPS, col = "gray")
 
-hist(partyVotesP$pTurnout, breaks = "FD", freq = FALSE, col = "green2", 
+hist(partyVotesP$pTurnout, breaks = "FD", freq = FALSE, col = "#56bd70",
      main = paste("Histogram of turnout rates"),
      xlab = "Turnout rate")
-lines(density(partyVotesP$pTurnout), col = "navy")
+lines(density(partyVotesP$pTurnout), col = "navy", lwd = 2)
 rug(partyVotesP$pTurnout, col = "gray")
 
 hist(partyVotesP$pPD, breaks = "FD", freq = FALSE, col = "orange", 
      main = paste("Histogram of PD vote share"), xlim = xrange,
      xlab = "PD vote share")
-lines(density(partyVotesP$pPD), col = "navy")
+lines(density(partyVotesP$pPD), col = "navy", lwd = 2)
 rug(partyVotesP$pPD, col = "gray")
 
-hist(partyVotesP$pInvalid, breaks = "FD", freq = FALSE, col = "thistle1", 
+hist(partyVotesP$pInvalid, breaks = "FD", freq = FALSE, col = "#FE6F5E", 
      main = paste("Histogram of invalid ballot rates"), 
      xlab = "Invalid ballot rate")
-
-lines(density(partyVotesP$pInvalid), col = "navy")
+lines(density(partyVotesP$pInvalid), col = "navy", lwd = 2)
 rug(partyVotesP$pInvalid, col = "gray")
 
 hist(partyVotesP$pOP, breaks = "FD", freq = FALSE, col = "orange", 
      main = paste("Histogram of other parties' vote shares"),
      xlim = xrange, xlab = "Other parties' vote share")
-lines(density(partyVotesP$pOP), col = "navy")
+lines(density(partyVotesP$pOP), col = "navy", lwd = 2)
 rug(partyVotesP$pOP, col = "gray")
 
+# plot a normal curve for reference
+plot(dnorm, -3, 3, col = "navy", lwd = 3, 
+     main = "Standard Normal Distribution",
+     xlab = "Z",
+     ylab = "Density"
+)
 
+# reset chart area
+par(mfrow = c(1, 1))
 
 # Group aggregated votes by district to look at the constituency level
 votesGroupedByDistrict <- partyVotes %>% group_by(District) %>% 

@@ -59,7 +59,7 @@ NormTestsWithVisuals <- function(vecData, lblData, isDiscrete) {
     xlab(paste(lblData, " Vote Proportions")) +
     ylab("CDF") +
     #geom_line(size=1) +
-    geom_segment(aes(x = x0[1], y = y0[1], xend = x0[1], yend = y1[1]),
+    geom_segment(aes(x = x0[1], y = y0[1], xend = x0[1], yend = y1[1], linetype = "Dmax"),
                  linetype = "solid", color = "red") +
     geom_point(aes(x = x0[1] , y= y0[1]), color="red", size=2) +
     geom_point(aes(x = x0[1] , y= y1[1]), color="red", size=2) +
