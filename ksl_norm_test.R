@@ -13,6 +13,7 @@
 # Run the Kolmogorov-Smirnov Normality test with Lilliefors criteria on
 # each of pPS, pPD, pOP.
 # ----
+
 # PS
 resultPS <- NormTestsWithVisuals(partyVotesP$pPS, "PS", 0)
 
@@ -22,6 +23,10 @@ resultPS[[2]]
 resultPS[[3]]
 resultPS[[4]]
 resultPS[[5]]
+# Compute Lilliefors critical value for reference for n > 50
+D_crit <-0.895/((0.83 + length(partyVotesP$pPS)) / 
+                  sqrt(length(partyVotesP$pPS)) - 0.01)
+D_crit
 resultPS[[6]]
 
 # ----
@@ -39,7 +44,7 @@ resultPD[[6]]
 
 # ----
 # Share PS/PD
-resultPSPD <- NormTestsWithVisuals(partyVotesP$pPSPD, "PS/PD", 0)
+resultPSPD <- NormTestsWithVisuals(partyVotesP$pPSPD, "PS/PD ratio", 0)
 
 # Print results - graph and text - in files
 resultPSPD[[1]]
@@ -171,22 +176,58 @@ resultInvalid[[6]]
 # PS - fits Weibull
 resultPS <- FitOtherDistributions(partyVotesP$pPS, "PS", FALSE)
 resultPS
+# plot the weibull:
+x <- partyVotesP$pPS
+crv <- function(x) dweibull(x, shape = 5.2020632, scale = 0.5345796)
+hist(partyVotesP$pPS, breaks = "FD", freq = FALSE, col = "orange",
+     main = paste("Weibull fit for PS vote share"), 
+     xlab = "PS vote share")
+curve(Vectorize(crv)(x), from = 0, to = 1, add=TRUE, lwd=2, col="navy")
 
 # PD - fits normal
 resultPD <- FitOtherDistributions(partyVotesP$pPD, "PD", FALSE)
 resultPD
+# plot the normal:
+x <- partyVotesP$pPD
+crv <- function(x) dnorm(x, mean = 0.3894273, sd = 0.1164794)
+hist(partyVotesP$pPD, breaks = "FD", freq = FALSE, col = "orange",
+     main = paste("Normal fit for PD vote share"), 
+     xlab = "PD vote share")
+curve(Vectorize(crv)(x), from = 0, to = 1, add=TRUE, lwd=2, col="navy")
 
-# Share PS/PD - fits normal
+# Share PS/PD - fits log-normal
 resultPSPD <- FitOtherDistributions(partyVotesP$pPSPD, "PS/PD", FALSE)
 resultPSPD
+# plot the log-normal:
+x <- partyVotesP$pPSPD
+crv <- function(x) dlnorm(x, meanlog = 0.2512484, sdlog = 0.5823473)
+hist(partyVotesP$pPSPD, breaks = "FD", freq = FALSE, col = "orange",
+     main = paste("Normal fit for PS-to-PD vote share ratio"), 
+     xlab = "PS/PD vote share ratio")
+curve(Vectorize(crv)(x), from = 0, to = 10, add=TRUE, lwd=2, col="navy")
 
 # Other Parties -  fits beta
 resultOP <- FitOtherDistributions(partyVotesP$pOP, "Other Parties", FALSE)
 resultOP
+# plot the beta:
+x <- partyVotesP$pOP
+crv <- function(x) dbeta (x, shape1 = 1.940916, shape2 = 14.430417)
+hist(partyVotesP$pOP, breaks = "FD", freq = FALSE, col = "orange",
+     main = paste("Beta fit for other parties' vote share"),
+     xlab = "Other parties' vote share")
+curve(Vectorize(crv)(x), from = 0, to = 1, add=TRUE, lwd=2, col="navy")
 
 # Turnout - fits Weibull
 resultTurnout <- FitOtherDistributions(partyVotesP$pTurnout, "Turnout", FALSE)
 resultTurnout
+# plot the weibull:
+x <- partyVotesP$pTurnout
+crv <- function(x) dweibull(x, shape = 5.6563431, scale = 0.5028294)
+hist(partyVotesP$pTurnout, breaks = "FD", freq = FALSE, col = "orange",
+     main = paste("Weibull fit for voter turnout"), xlim = xrange, 
+     xlab = "Turnout")
+curve(Vectorize(crv)(x), from = 0, to = 1, add=TRUE, lwd=2, col="navy")
+
 
 # Invalid Ballots - fits Normal
 resultInvalid <- FitOtherDistributions(partyVotesP$pInvalid, 

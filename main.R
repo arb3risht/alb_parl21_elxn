@@ -13,6 +13,7 @@ library(DescTools) # used for the Lilliefors test
 library(benford.analysis) # used for the Benford's Law conformance test
 library(Matching) # for ks.boot (discrete-sample K-S test)
 library(fitdistrplus) # for determining possible fitting distributions
+library(qicharts2) # for control charts for our hypothesis tests
 
 # Load library of functions
 source(file = here("lib/fun.R"))

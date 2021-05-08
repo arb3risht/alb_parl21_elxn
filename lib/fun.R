@@ -193,24 +193,30 @@ FitOtherDistributions <- function(vecData, lblData, isDiscrete) {
   dtlognorm <- fitdist(vecData, distr = "lnorm")
   dtnorm <- fitdist(vecData, distr = "norm")
   dtweibull <- fitdist(vecData, distr = "weibull")
-  dtbeta <- fitdist(vecData, distr = "beta")
-  plot(dtlognorm)
-  plot(dtnorm)
-  plot(dtweibull)
-  plot(dtbeta)
+  # ignore beta-fit for PS/PD ratio:
+  dtbeta <- dtweibull
+  if (lblData != "PS/PD") {
+    dtbeta <- fitdist(vecData, distr = "beta")
+  }
+  # plot(dtlognorm)
+  # plot(dtnorm)
+  # plot(dtweibull)
+  # plot(dtbeta)
   
   # find best fit
   dtDistr <- list(dtlognorm, dtnorm, dtweibull, dtbeta)
   
   # Check best fit using Akaike values
   bestFit <- dtDistr[[1]]
+  pos <- 1
   for (i in 2:length(dtDistr)) {
     if (dtDistr[[i]]$aic < bestFit$aic) {
       bestFit <- dtDistr[[i]]
+      pos <- i
     }
   }
   
-  results <- list(datPlots, bestFit, bestFit$aic)
+  results <- list(datPlots, bestFit, pos, bestFit$aic)
   
   return (results)
 }

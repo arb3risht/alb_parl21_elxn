@@ -58,7 +58,7 @@ partyVotesP <- data.frame(partyVotes$District,
                           partyVotes$`Administrative Unit`,
                           partyVotes$PS / partyVotes$`Total Eligible Votes`,
                           partyVotes$PD / partyVotes$`Total Eligible Votes`,
-                          partyVotes$PS / (partyVotes$PS + partyVotes$PD),
+                          partyVotes$PS / partyVotes$PD,
                           partyVotes$`Other Parties` / 
                             partyVotes$`Total Eligible Votes`,
                           partyVotes$`Invalid Ballots` / 
@@ -216,6 +216,50 @@ totalInvalidBallots
 pInvalidBallots
 # ----
 
+# Is the observed ~5% invalid ballot unusual, given prior election results?
+# Let's test the hypotheses:
+#   H_0: We expect around 2% invalid ballots
+#        (The observed 5% invalid ballot proportion is not unusual.)
+#   H_A: We got more than 2% invalid ballots
+#        (The observed 5% invalid ballot proportion is unusual, given 
+#        previous elections' results averaging at ~2%.)
+# Since invalid ballots were normally distributed at 95% conf. level, we can
+# use the z-scores to test the hypotheses above. Let b denote the proportion
+# of invalid ballots. Then, if [1 - P(b < 5%)] <= p-value of 5%, we reject H_0
+# in favor of H_A. This is a dichotomous experiment with p_success & failure, 
+# where p_success = expected, i.e. our historical control proportion.
+
+# We expect 2% of total votes being invalid ballots based on prior elections
+expected <- 0.02
+
+# standard deviation of sample proportion from these elections
+# given the fact that invalid ballots were found to be normally distributed
+stdev <- sd(partyVotesP$pInvalid) / sqrt(length(partyVotesP$pInvalid))
+
+# verify the sample is large enough to warrant use of normal distribution
+# by confirming that the following interval is within [0, 1]
+paste("[", expected - 3*stdev, expected + 3*stdev, "]")
+
+# z-score
+z <- (pInvalidBallots - expected) / stdev
+
+# P(b >= z) = 1 - P(b < z):
+pValue <- 1 - pnorm(z, mean = 0, sd = 1, lower.tail = TRUE)
+pValue
+
+# confidence interval @95%
+lInt <- expected - 1.96*stdev
+rInt <- expected + 1.96*stdev
+paste("C.I. at 95%: (", lInt, ", ", rInt, 
+      "); Observed invalid ballots:", pInvalidBallots)
+
+if (pInvalidBallots < lInt | pInvalidBallots > rInt) {
+  paste("Reject H_0 in favor of H_A")
+} else {
+  paste("Failed to Reject H_0")
+}
+# ----
+
 # Group aggregated votes by municipality to look at that level
 votesGroupedByMunicipality <- partyVotes %>% group_by(Municipality) %>% 
   summarize(PS = sum(PS), PD = sum(PD), `Other Parties` = sum(`Other Parties`),
@@ -241,3 +285,33 @@ votesGroupedByMunicipality <- within(votesGroupedByMunicipality,
 # Print the municipality-level data set for later reference
 write_csv(votesGroupedByMunicipality, partyVotesByMunicipalityFile, na = "NA", 
           append = FALSE)
+
+# ----
+# control chart for variability
+qic(partyVotesP$pPS, chart="i", agg.fun = c("mean"), 
+    title = "PS Vote Share Control Chart",
+    xlab = "Administrative Unit",
+    ylab = "Vote Share",
+    print.summary = TRUE)
+qic(partyVotesP$pPD, chart="i", agg.fun = c("mean"), 
+    title = "PD Vote Share Control Chart",
+    xlab = "Administrative Unit",
+    ylab = "Vote Share",
+    print.summary = TRUE)
+
+#########################################################
+#
+# Vote-Seat share analysis
+# ----
+# Convert seats to shares (%-ages)
+voteSeatShare <- within(voteSeatShare, 
+                        TotalSeats <- (`PS Seats` + `PD Seats` + `OP Seats`))
+voteSeatShare <- within(voteSeatShare, 
+                        PSSeatShare <- `PS Seats` / TotalSeats)
+voteSeatShare <- within(voteSeatShare, 
+                        PDSeatShare <- `PD Seats` / TotalSeats)
+voteSeatShare <- within(voteSeatShare, 
+                        OPSeatShare <- `OP Seats` / TotalSeats)
+
+# Next, plot the vote-seat share for each party to infer the curve:
+#plot(x = voteSeatShare$`PS Vote Share`, y = voteSeatShare$PSSeatShare, type = "p")
