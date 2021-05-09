@@ -218,27 +218,28 @@ pInvalidBallots
 
 # Is the observed ~5% invalid ballot unusual, given prior election results?
 # Let's test the hypotheses:
-#   H_0: We expect around 2% invalid ballots
+#   H_0: We expect around 2% invalid ballots (population proportion mean)
 #        (The observed 5% invalid ballot proportion is not unusual.)
 #   H_A: We got more than 2% invalid ballots
 #        (The observed 5% invalid ballot proportion is unusual, given 
 #        previous elections' results averaging at ~2%.)
 # Since invalid ballots were normally distributed at 95% conf. level, we can
 # use the z-scores to test the hypotheses above. Let b denote the proportion
-# of invalid ballots. Then, if [1 - P(b < 5%)] <= p-value of 5%, we reject H_0
+# of invalid ballots. Then, if [1 - P(b < z)] <= p-value at 5%, we reject H_0
 # in favor of H_A. This is a dichotomous experiment with p_success & failure, 
 # where p_success = expected, i.e. our historical control proportion.
 
 # We expect 2% of total votes being invalid ballots based on prior elections
 expected <- 0.02
+pInvalidBallots <- 0.035
 
-# standard deviation of sample proportion from these elections
-# given the fact that invalid ballots were found to be normally distributed
-stdev <- sd(partyVotesP$pInvalid) / sqrt(length(partyVotesP$pInvalid))
-
-# verify the sample is large enough to warrant use of normal distribution
-# by confirming that the following interval is within [0, 1]
-paste("[", expected - 3*stdev, expected + 3*stdev, "]")
+# test if z-scores can be used
+if (min(length(partyVotesP$pInvalid) * expected,
+    length(partyVotesP$pInvalid) * (1 - expected)) >= 5) {
+  paste ("Use z-scores")
+}
+# standard deviation of population proportion from the historical control
+stdev <- sqrt(expected * (1 - expected) / length(partyVotesP$pInvalid))
 
 # z-score
 z <- (pInvalidBallots - expected) / stdev
@@ -247,17 +248,17 @@ z <- (pInvalidBallots - expected) / stdev
 pValue <- 1 - pnorm(z, mean = 0, sd = 1, lower.tail = TRUE)
 pValue
 
-# confidence interval @95%
-lInt <- expected - 1.96*stdev
-rInt <- expected + 1.96*stdev
+# sample confidence interval @95%
+alfa <- 0.05
+lInt <- pInvalidBallots - abs(qnorm(alfa/2)) * 
+                            sqrt(pInvalidBallots * (1 - pInvalidBallots) / 
+                            length(partyVotesP$pInvalid))
+rInt <- pInvalidBallots + abs(qnorm(alfa/2)) * 
+                            sqrt(pInvalidBallots * (1 - pInvalidBallots) / 
+                            length(partyVotesP$pInvalid))
 paste("C.I. at 95%: (", lInt, ", ", rInt, 
-      "); Observed invalid ballots:", pInvalidBallots)
+      "); Historical control:", expected)
 
-if (pInvalidBallots < lInt | pInvalidBallots > rInt) {
-  paste("Reject H_0 in favor of H_A")
-} else {
-  paste("Failed to Reject H_0")
-}
 # ----
 
 # Group aggregated votes by municipality to look at that level
@@ -313,5 +314,88 @@ voteSeatShare <- within(voteSeatShare,
 voteSeatShare <- within(voteSeatShare, 
                         OPSeatShare <- `OP Seats` / TotalSeats)
 
-# Next, plot the vote-seat share for each party to infer the curve:
-#plot(x = voteSeatShare$`PS Vote Share`, y = voteSeatShare$PSSeatShare, type = "p")
+# Theoretical s-v curves, where parameters a and b are computed
+# empirically from the Albanian election results of 2021 and 2017
+svPSCurve = function(x){
+  # compute experimental consts a and b from the last two elections:
+  vsPS1 <- voteSeatShare %>% filter(`Election Year` == 2017)
+  vsPS2 <- voteSeatShare %>% filter(`Election Year` == 2021)
+  s1 <- vsPS1$PSSeatShare
+  v1 <- vsPS1$`PS Vote Share`
+  s2 <- vsPS2$PSSeatShare
+  v2 <- vsPS2$`PS Vote Share`
+  
+  b <- log(s1*(1-s2) / s2*(1-s1)) / log(v1*(1-v2) / v2*(1-v1))
+  a <- (s1/(1-s1)) / (v1/(1-v1))^b
+  
+  a*x^b / (a*x^b + (1-x)^b)
+}
+#plot(svPSCurve, 0, 1)
+
+# PD Curve
+svPDCurve = function(x){
+  # compute experimental consts a and b from the last two elections:
+  vsPS1 <- voteSeatShare %>% filter(`Election Year` == 2017)
+  vsPS2 <- voteSeatShare %>% filter(`Election Year` == 2021)
+  s1 <- vsPS1$PDSeatShare
+  v1 <- vsPS1$`PD Vote Share`
+  s2 <- vsPS2$PDSeatShare
+  v2 <- vsPS2$`PD Vote Share`
+  
+  b <- log(s1*(1-s2) / s2*(1-s1)) / log(v1*(1-v2) / v2*(1-v1))
+  a <- (s1/(1-s1)) / (v1/(1-v1))^b
+  
+  a*x^b / (a*x^b + (1-x)^b)
+}
+#plot(svPDCurve, 0, 1)
+
+# Other Parties curve
+svOPCurve = function(x){
+  # compute experimental consts a and b from the last two elections:
+  vsPS1 <- voteSeatShare %>% filter(`Election Year` == 2017)
+  vsPS2 <- voteSeatShare %>% filter(`Election Year` == 2021)
+  s1 <- vsPS1$OPSeatShare
+  v1 <- vsPS1$`OP Vote Share`
+  s2 <- vsPS2$OPSeatShare
+  v2 <- vsPS2$`OP Vote Share`
+  
+  b <- log(s1*(1-s2) / s2*(1-s1)) / log(v1*(1-v2) / v2*(1-v1))
+  a <- (s1/(1-s1)) / (v1/(1-v1))^b
+  
+  a*x^b / (a*x^b + (1-x)^b)
+}
+#plot(svOPCurve, 0, 1)
+
+# Next, plot the vote-seat share for each party & year to infer the curve.
+# x-axis = percentage of votes
+# y-axis = percentage of shares
+# plot three curves - one for each party
+
+# create the three data sets we wish to plot
+# x = vote share, y = seat share
+psVS <- data.frame(voteSeatShare$`PS Vote Share`, voteSeatShare$PSSeatShare)
+names(psVS) <- c("vPS", "sPS")
+pdVS <- data.frame(voteSeatShare$`PD Vote Share`, voteSeatShare$PDSeatShare)
+names(pdVS) <- c("vPD", "sPD")
+opVS <- data.frame(voteSeatShare$`OP Vote Share`, voteSeatShare$OPSeatShare)
+names(opVS) <- c("vOP", "sOP")
+
+ggplot() +
+  geom_point(psVS, mapping = aes(x = vPS, y = sPS, color = "PS V-S"), size=3) +
+  geom_point(pdVS, mapping = aes(x = vPD, y = sPD, color = "PD V-S"), size=3) +
+  geom_point(opVS, mapping = aes(x = vOP, y = sOP, color = "OP V-S"), size=3) +
+  geom_function(fun = svPSCurve, aes(color = "PS V-S")) +
+  geom_function(fun = svPDCurve, aes(color = "PD V-S")) +
+  geom_function(fun = svOPCurve, aes(color = "OP V-S")) +
+  xlim(0, 1) +
+  ylim(0, 1) +
+  scale_shape_manual(values = c(3, 16, 17)) +
+  scale_color_manual(values = c("orange2", "navy", "red2")) +
+  xlab(paste("Vote Percentage")) +
+  ylab("Seat Percentage") +
+  ggtitle(paste("Albanian vote-seat (V-S) share curves: \n", 
+                "1997-2021 parliamentary elections \n",
+                "- Dots represent observed vote-seat shares \n",
+                "- Curves represent the vote-seat share models")) +
+  theme(legend.title=element_blank(), legend.position = "bottom") + 
+  theme(plot.title = element_text(size=12))
