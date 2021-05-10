@@ -231,15 +231,15 @@ pInvalidBallots
 
 # We expect 2% of total votes being invalid ballots based on prior elections
 expected <- 0.02
-pInvalidBallots <- 0.035
 
 # test if z-scores can be used
-if (min(length(partyVotesP$pInvalid) * expected,
-    length(partyVotesP$pInvalid) * (1 - expected)) >= 5) {
+if (min(length(partyVotesP$pInvalid) * pInvalidBallots,
+    length(partyVotesP$pInvalid) * (1 - pInvalidBallots)) >= 5) {
   paste ("Use z-scores")
 }
-# standard deviation of population proportion from the historical control
-stdev <- sqrt(expected * (1 - expected) / length(partyVotesP$pInvalid))
+# standard deviation
+stdev <- sqrt(pInvalidBallots * (1 - pInvalidBallots) / 
+                length(partyVotesP$pInvalid))
 
 # z-score
 z <- (pInvalidBallots - expected) / stdev
@@ -248,7 +248,7 @@ z <- (pInvalidBallots - expected) / stdev
 pValue <- 1 - pnorm(z, mean = 0, sd = 1, lower.tail = TRUE)
 pValue
 
-# sample confidence interval @95%
+# 2021 election sample confidence interval @95%
 alfa <- 0.05
 lInt <- pInvalidBallots - abs(qnorm(alfa/2)) * 
                             sqrt(pInvalidBallots * (1 - pInvalidBallots) / 

@@ -43,7 +43,7 @@ resultPD[[5]]
 resultPD[[6]]
 
 # ----
-# Share PS/PD
+# Share PS/PD - a simple metric of inter-party competitiveness
 resultPSPD <- NormTestsWithVisuals(partyVotesP$pPSPD, "PS/PD ratio", 0)
 
 # Print results - graph and text - in files

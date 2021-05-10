@@ -220,3 +220,70 @@ FitOtherDistributions <- function(vecData, lblData, isDiscrete) {
   
   return (results)
 }
+
+# Plot observed frequencies against Benford's distribution
+# df: observed frequencies in a data frame
+# lblData: optional label for chart title, etc.
+# useLines: if TRUE, plot lines, else plot histogram + Benford curve
+PlotBenford <- function(df, lblData, useLines) {
+  # Generate Benford table, for reference
+  dgt <- vector(mode = "numeric", length = 9)
+  bnfrd <- vector(mode = "numeric", length = 9)
+  for (i in 1:9) {
+    dgt[i] = i # digits
+    bnfrd[i] = as.double(log10(1+1/i)) # distribution
+  }
+  benfordDistrib <- data.frame(dgt, bnfrd)
+  names(benfordDistrib) <- c("Digit", "Probability")
+  
+  # If is null df, then compute the Benford curve/ histogram only
+  if (!is.null(df)) {
+    # Compute observed frequencies of leading digit
+    # Group sample1 by values
+    bfreq <- tabulate(df$LeadingDigit, nbins = 9)
+    # compute proportions
+    sum1 <- as.double(sum(bfreq))
+    for (i in 1:9) {
+      bfreq[i] = bfreq[i] / sum1
+    }
+    
+    # Plot observed frequencies as bars overlaying Benford's curve for reference:
+    dg <- data.frame(dgt, bfreq)
+    names(dg) <- c("Digit", "Probability")
+  } else{
+    dg <- benfordDistrib
+  }
+  
+  if (useLines == FALSE) {
+    gbf <- ggplot() +
+      geom_col(dg, mapping = aes(x = Digit, y = Probability, 
+                                 color = paste(lblData, 
+                                 " leading digit frequency")),
+               fill = "orange") +
+      geom_line(benfordDistrib, mapping = aes(x = Digit, y = Probability, 
+                                              color = "Benford's Law")) +
+      scale_color_manual(values=c("navy", "orange")) +
+      scale_y_continuous(breaks = scales::pretty_breaks()) +
+      scale_x_continuous("Digit", labels = as.character(dgt), breaks = dgt) +
+      xlab(paste("Digit")) +
+      ylab("Probability") +
+      ggtitle(paste("Benford's Law:", lblData, " Votes")) +
+      theme(legend.title=element_blank(), legend.position = "bottom")
+  } else {
+    gbf <- ggplot() +
+      geom_line(dg, mapping = aes(x = Digit, y = Probability, 
+                                  color = paste(lblData, 
+                                                " leading digit frequency"))) +
+      geom_line(benfordDistrib, mapping = aes(x = Digit, y = Probability, 
+                                              color = "Benford's Law")) +
+      scale_color_manual(values=c("navy", "orange")) +
+      scale_y_continuous(breaks = scales::pretty_breaks()) +
+      scale_x_continuous("Digit", labels = as.character(dgt), breaks = dgt) +
+      xlab(paste("Digit")) +
+      ylab("Probability") +
+      ggtitle(paste("Benford's Law:", lblData, " Votes")) +
+      theme(legend.title=element_blank(), legend.position = "bottom")
+  }
+  
+  return (gbf)
+}
