@@ -129,6 +129,8 @@ votesGroupedByDistrict <- partyVotes %>% group_by(District) %>%
             `Invalid Ballots` = sum(`Invalid Ballots`),
             `Eligible Voters` = sum(`Eligible Voters`),
             `Total Eligible Votes` = sum(`Total Eligible Votes`),
+            meanVotes = mean(`Total Votes`),
+            medianVotes = median(`Total Votes`),
             `Total Votes` = sum(`Total Votes`), 
             Turnout = sum(`Total Votes`) / sum(`Eligible Voters`))
 # Add some computed empirical probabilities:
@@ -206,6 +208,7 @@ minInvalid <- votesGroupedByDistrict[which(votesGroupedByDistrict$pInvalid ==
                                min(votesGroupedByDistrict$pInvalid)), ]
 maxInvalid <- votesGroupedByDistrict[which(votesGroupedByDistrict$pInvalid == 
                                max(votesGroupedByDistrict$pInvalid)), ]
+
 # Total invalid ballots & proportion
 totalInvalidBallots <- sum(votesGroupedByDistrict$`Invalid Ballots`)
 pInvalidBallots <- sum(votesGroupedByDistrict$`Invalid Ballots`) / 
