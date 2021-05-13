@@ -1,6 +1,6 @@
 # source_data.R
 # Load source data from CSV files located in the ./data directory.
-# CC BY-SA. Arbër Boriçi, 2021. Contact: arberisht@gmail.com. 
+# CC BY-SA. W.A. Boriçi, 2021. Contact: arberisht@gmail.com. 
 # Full license terms at https://creativecommons.org/licenses/by-sa/4.0/.
 
 # File locations
@@ -8,7 +8,7 @@ partyVotesFile <- here('data/alb_parl21_elxn_party_votes.csv')
 voteSeatShareFile <- here('data/vote-seat-share.csv')
 rawPartyData <- here('data/party_votes_au.csv') # raw party data
 rawElxnData <- here('data/elxn_data_all.csv') # results at A.-U. level
-joinedElxnData <- here('data/elxn_data_joined.csv') # output of joined data
+finalElxnData <- here('data/elxn_data_final.csv') # output of preprocessed data
 
 # Read CSV data into tibbles for votes aggregated at the admin unit
 partyVotesRaw <- read_csv(partyVotesFile)
@@ -17,8 +17,6 @@ voteSeatShare <- read_csv(voteSeatShareFile)
 # Read CSV data into tibbles for votes at the polling-station level
 rawPartyVotes <- read_csv(rawPartyData)
 rawQVVotes <- read_csv(rawElxnData)
-view(rawPartyVotes)
-view(rawQVVotes)
 
 # Pre-processing: Populate party votes from rawPartyVotes into the last 13
 # fields of rawQVVotes by joining on the PollingStation field of both sets
@@ -63,4 +61,4 @@ for (j in 1:noPartyResults) {
 
 # export the joined data for later reference
 # write the data set out
-write_csv(rawQVVotes, joinedElxnData, na = "NA", append = FALSE)
+write_csv(rawQVVotes, finalElxnData, na = "NA", append = FALSE)

@@ -1,6 +1,6 @@
 # ksl_norm_test.R
 # Kolmogorov-Smirnov-Lilliefors test for party and candidate votes.
-# CC BY-SA. Arbër Boriçi, 2021. Contact: arberisht@gmail.com. 
+# CC BY-SA. W.A. Boriçi, 2021. Contact: arberisht@gmail.com. 
 # Full license terms at https://creativecommons.org/licenses/by-sa/4.0/.
 
 # Output files

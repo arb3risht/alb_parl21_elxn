@@ -1,7 +1,7 @@
 # main.R
 # The goal of this project is to carry out various analyses on the
 # 2021 Albanian Parliamentary Election data.
-# CC BY-SA. Arbër Boriçi, 2021. Contact: arberisht@gmail.com. 
+# CC BY-SA. W.A. Boriçi, 2021. Contact: arberisht@gmail.com. 
 # Full license terms at https://creativecommons.org/licenses/by-sa/4.0/.
 
 # Load packages used throughout the project
@@ -23,6 +23,9 @@ source(file = here("source_data.R"))
 
 # Describe the data visually and statistically
 source(file = here("data_description.R"))
+
+# Analyze vote-seat share curves and election bias
+source(file = here("vote_seat_bias.R"))
 
 # Run the Kolmogorov-Smirnov-Lilliefors normality tests
 source(file = here("ksl_norm_test.R"))

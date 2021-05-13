@@ -1,6 +1,6 @@
 # fun.R
 # Function definitions.
-# CC BY-SA. Arbër Boriçi, 2021. Contact: arberisht@gmail.com. 
+# CC BY-SA. W.A. Boriçi, 2021. Contact: arberisht@gmail.com. 
 # Full license terms at https://creativecommons.org/licenses/by-sa/4.0/.
 
 # Execute normality tests & related plots
