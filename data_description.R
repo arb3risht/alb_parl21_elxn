@@ -308,7 +308,7 @@ qic(partyVotesP$pPD, chart="i", agg.fun = c("mean"),
 # Process raw granular data into proportions and 
 # compute other variables, such as turnout %-age
 
-fPartyVotes <- data.frame(rawQVVotes$District,
+fPartyVotes <- data.frame(str_to_sentence(rawQVVotes$District),
                           rawQVVotes$Municipality,
                           rawQVVotes$AdministrativeUnit,
                           paste("P-", rawQVVotes$PollingStation, sep = ""),
