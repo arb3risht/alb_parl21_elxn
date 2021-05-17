@@ -18,6 +18,7 @@ NormTestsWithVisuals <- function(vecData, lblData, isDiscrete) {
   # Plot the K-S test results as S-curves
   # EDF vector:
   vecEDFlength <- length(vecData) # number of variables in vecData
+  
   # Create vecEDF as the EDF of KS Test
   vecEDF <- vector(mode = "numeric", length = vecEDFlength)
   for (i in 1:vecEDFlength) {
@@ -81,8 +82,11 @@ NormTestsWithVisuals <- function(vecData, lblData, isDiscrete) {
                         alternative = "two.sided")
   }
   
-  # Run the Shapiro normality test
-  resultShap <- shapiro.test(vecData)
+  # Run the Shapiro normality test, only for sample sizes 3 to 5000
+  resultShap <- NULL
+  if (vecEDFlength >= 3 & vecEDFlength <= 5000) {
+    resultShap <- shapiro.test(vecData)
+  }
   
   # Save results in a return list
   # NB: if discrete, resultKSL returns an empty vector
@@ -190,11 +194,16 @@ ExtractLeadingDigitVector <- function(vecData) {
 # Check for possible distribution candidates for a given vector
 FitOtherDistributions <- function(vecData, lblData, isDiscrete) {
   datPlots <- descdist(vecData, discrete = isDiscrete)
-  dtlognorm <- fitdist(vecData, distr = "lnorm")
+  
+  # do not test log-norm if there are zero-valued entries
+  dtlognorm <- NULL
+  if (!0 %in% vecData) {
+    dtlognorm <- fitdist(vecData, distr = "lnorm")
+  }
   dtnorm <- fitdist(vecData, distr = "norm")
   dtweibull <- fitdist(vecData, distr = "weibull")
   # ignore beta-fit for PS/PD ratio:
-  dtbeta <- dtweibull
+  dtbeta <- NULL
   if (lblData != "PS/PD") {
     dtbeta <- fitdist(vecData, distr = "beta")
   }
@@ -286,4 +295,87 @@ PlotBenford <- function(df, lblData, useLines) {
   }
   
   return (gbf)
+}
+
+# Function to compare two proportions, given a vector vecData & a district
+# and a selection of tests as per the following schedule:
+# 1: Proportion test
+# 2: Likelihood ration test
+# 3: Chi-squared two-by-two test
+# 4: Run all tests
+CompareTurnouts <- function(vecData, district, whichTest) {
+  # proportions:
+  pW <- vecData$pVotingWomen[which(vecData["District"] == district)]
+  pM <- vecData$pVotingMen[which(vecData["District"] == district)]
+  tW <- vecData$VotingWomen[which(vecData["District"] == district)]
+  tM <- vecData$VotingMen[which(vecData["District"] == district)]
+  nW <- vecData$RegisteredWomen[which(vecData["District"] == district)]
+  nM <- vecData$RegisteredMen[which(vecData["District"] == district)]
+  
+  rs <- list() # store test results here
+  if (whichTest == 1) {
+    # prop test w/o Yates' continuity
+    rs <- prop.test(x = c(tW, tM), n = c(nW, nM), correct = FALSE)
+  } else if (whichTest == 2) {
+    # LRT test
+    nom = c(tW, tM, nW - tW, nM - tM, nW + nM)
+    denom = c(nW, nM, tW + tM, nW - tW + nM - tM) 
+
+    LRT_Stat = 2.0 * log(exp(sum(nom * log(nom)) - sum(denom * log(denom))))
+    
+    rs <- pchisq(LRT_Stat, 1, lower.tail = FALSE)
+  } else if (whichTest == 3) {
+    # Chi-sq 2x2 test
+    m = matrix(c(tW, nW - tW, tM, nM - tM), nrow = 2)
+    rs <- chisq.test(m, correct = FALSE)
+  } else {
+    # store all tests in a list
+    t1 <- paste("Prop Test:\n", 
+                prop.test(x = c(tW, tM), n = c(nW, nM), correct = FALSE))
+    
+    nom = c(tW, tM, nW - tW, nM - tM, nW + nM)
+    denom = c(nW, nM, tW + tM, nW - tW + nM - tM) 
+    t2 <- paste("LRT Test: \n", 
+                pchisq(2 * log(exp(sum(nom * log(nom)) - 
+                                     sum(denom * log(denom)))), 
+                 1, lower.tail = FALSE))
+    
+    t3 <- paste("ChiSq Test:\n",
+                chisq.test(matrix(c(tW, nW - tW, tM, nM - tM), nrow = 2), 
+                     correct = FALSE))
+    
+    rs = list(t1, t2, t3)
+  }
+  
+# 
+  # proportion test step by step
+#   # interval standard error:             
+#   sdInt <- sqrt(pW * (1.0 - pW) / nW + pM * (1.0 - pM) / nM) 
+#   
+#   # Confidence interval at stated alpha:
+#   alfa <- 0.05
+#   lInt <- (pW - pM) - abs(qnorm(alfa/2)) * sdInt
+#   rInt <- (pW - pM) + abs(qnorm(alfa/2)) * sdInt
+#   CI <- paste("(", round(lInt, 4), ", ", 
+#               round(rInt, 4), ")", sep = "")
+#   
+#   # Compute pooled proportion, given the turnout for women and for men
+#   pooledP <- (vecData$VotingWomen[which(vecData["District"] == district)] + 
+#                 vecData$VotingMen[which(vecData["District"] == district)]) /
+#     (nW + nM)
+#   
+#   # compute z-score standard dev
+#   sdZ <- (pW - pM - 0) / 
+#     sqrt(pooledP * (1.0 - pooledP) * (1.0 / nW + 1.0 / nM ))
+#   
+#   # p-value;
+#   pVal <- 0
+#   if (sdZ < 0) {
+#     pVal <- (2 * (1 - pnorm(sdZ, lower.tail=FALSE)))
+#   } else {
+#     pVal <- (2 * pnorm(sdZ, lower.tail=FALSE))
+#   }  
+#   
+  # return the percentage-point difference and the test results
+  return (list(pW - pM, rs))
 }

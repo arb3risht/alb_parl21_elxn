@@ -10,6 +10,8 @@ partyVotePByAdminUnit <- here("out/party_votes_p_admin_unit.csv")
 descripStatsFile <- here("out/descript_stat.csv")
 partyVotesByDistrictFile <- here("out/party_votes_by_district.csv")
 partyVotesByMunicipalityFile <- here("out/party_votes_by_municipality.csv")
+partyVotesRawByPollingStation <- here("out/party_votes_raw_polling_station.csv")
+
 
 # Create a total columns for each administrative unit: TotalEligibleVotes as
 # the sum of reported party votes, and TotalVotes as the latter sum plus
@@ -226,23 +228,19 @@ pInvalidBallots
 #   H_A: We got more than 2% invalid ballots
 #        (The observed 5% invalid ballot proportion is unusual, given 
 #        previous elections' results averaging at ~2%.)
-# Since invalid ballots were normally distributed at 95% conf. level, we can
-# use the z-scores to test the hypotheses above. Let b denote the proportion
-# of invalid ballots. Then, if [1 - P(b < z)] <= p-value at 5%, we reject H_0
-# in favor of H_A. This is a dichotomous experiment with p_success & failure, 
-# where p_success = expected, i.e. our historical control proportion.
+# We'll use a one-sample prop-test against the historical control.
 
 # We expect 2% of total votes being invalid ballots based on prior elections
 expected <- 0.02
 
 # test if z-scores can be used
-if (min(length(partyVotesP$pInvalid) * pInvalidBallots,
-    length(partyVotesP$pInvalid) * (1 - pInvalidBallots)) >= 5) {
+if (min(sum(partyVotes$`Invalid Ballots`) * pInvalidBallots,
+    sum(partyVotes$`Invalid Ballots`) * (1 - pInvalidBallots)) >= 15) {
   paste ("Use z-scores")
 }
 # standard deviation
 stdev <- sqrt(pInvalidBallots * (1 - pInvalidBallots) / 
-                length(partyVotesP$pInvalid))
+                sum(partyVotes$`Invalid Ballots`))
 
 # z-score
 z <- (pInvalidBallots - expected) / stdev
@@ -259,8 +257,8 @@ lInt <- pInvalidBallots - abs(qnorm(alfa/2)) *
 rInt <- pInvalidBallots + abs(qnorm(alfa/2)) * 
                             sqrt(pInvalidBallots * (1 - pInvalidBallots) / 
                             length(partyVotesP$pInvalid))
-paste("C.I. at 95%: (", lInt, ", ", rInt, 
-      "); Historical control:", expected)
+paste("C.I. at 95%: (", round(lInt, 4), ", ", round(rInt, 4), 
+      "); Historical control:", expected, sep = "")
 
 # ----
 
@@ -307,7 +305,7 @@ qic(partyVotesP$pPD, chart="i", agg.fun = c("mean"),
 ################################################
 # Process raw granular data into proportions and 
 # compute other variables, such as turnout %-age
-
+# some turnout tallies are zero; control zero-division
 fPartyVotes <- data.frame(str_to_sentence(rawQVVotes$District),
                           rawQVVotes$Municipality,
                           rawQVVotes$AdministrativeUnit,
@@ -404,4 +402,9 @@ names(fPartyVotes) <- c("District",
                         "Other",
                         "pOther"
                         )
-view(fPartyVotes)
+
+# print the output
+write_csv(fPartyVotes, partyVotesRawByPollingStation, na = "NA", append = FALSE)
+
+# Remove any NA records from further statistical analyses
+fPartyVotes %>% drop_na() -> fPartyVotes
