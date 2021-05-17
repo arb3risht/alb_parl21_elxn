@@ -37,6 +37,9 @@ source(file = here("ksl_norm_test.R"))
 # Check conformity with Benford's Law for leading and second digits
 source(file = here("benford.R"))
 
+# Run some tests on women-men statistics and gaps
+source(file = here("women_vote.R"))
+
 
 
 
