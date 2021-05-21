@@ -379,3 +379,17 @@ CompareTurnouts <- function(vecData, district, whichTest) {
   # return the percentage-point difference and the test results
   return (list(pW - pM, rs))
 }
+
+# Given map data, an admin unit, return neighbors of that unit
+GetNeighbors <- function(mapData, adminUnit, neighbor){
+  gid3 <- mapData[which(mapData$NAME_3 == adminUnit), ]$GID_3
+  a <- mapData[which(mapData$NAME_3 == adminUnit), ]
+  for (i in 1:length(neighbor[gid3, ])) {
+    if (neighbor[gid3, i] == TRUE) {
+      b <- mapData[which(mapData$GID_3 == rownames(neighbor)[i]), ]
+      a <- rbind(a, b)
+    }
+  }
+  
+  return (a)
+}

@@ -18,6 +18,12 @@ library(qicharts2) # for control charts for our hypothesis tests
 library(ggmap) # remember to cite on any articles via citation("ggmap")
 library(maps)
 library(mapdata)
+library(GADMTools)
+library(raster) # required functions for GADM
+library(rgeos)
+library(rgdal)
+library(sp)
+library(maptools)
 
 # Load library of functions
 source(file = here("lib/fun.R"))
@@ -39,6 +45,9 @@ source(file = here("benford.R"))
 
 # Run some tests on women-men statistics and gaps
 source(file = here("women_vote.R"))
+
+# Analyze possible voter manipulation at polling-station level
+source(file = here("voter_manipulation.R"))
 
 
 
