@@ -240,7 +240,7 @@ view(albania_wrangled@data)
 # get neighbors of an admin unit & plot after joining with the auTurnout tibble
 # note: for the albania_wrangled tibble, use the correpsonding admin unit name,
 # which may be different from the name in the ngh tibble (mapping differences)
-ngh <- GetNeighbors(albania_wrangled, "Tërpan", neighbors)
+ngh <- GetNeighbors(albania_wrangled, "Zall Herr", "ALB.11.2.19_1", neighbors)
 ngh@data <- inner_join(ngh@data, auTurnout, by = c("GID_3" = "MappingID"),  )
 # get center points of the polygons; the row IDs are the GID_3 IDs:
 centers <- as.data.frame(coordinates(ngh))
@@ -248,7 +248,7 @@ centers <- cbind(centers, rownames(centers))
 names(centers) = c("c1", "c2", "cid")
 centers <- inner_join(centers, auTurnout, by = c("cid" = "MappingID"))
 # plot with centroids
-plotAU <- PlotNeighborsWithTurnout(ngh, "Terpan", centers)
+plotAU <- PlotNeighborsWithTurnout(ngh, "Zall Herr", centers)
 plotAU
 
 

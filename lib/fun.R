@@ -381,9 +381,17 @@ CompareTurnouts <- function(vecData, district, whichTest) {
 }
 
 # Given map data, an admin unit, return neighbors of that unit
-GetNeighbors <- function(mapData, adminUnit, neighbor){
-  gid3 <- mapData[which(mapData$NAME_3 == adminUnit), ]$GID_3
-  aDF <- mapData[which(mapData$NAME_3 == adminUnit), ]
+GetNeighbors <- function(mapData, adminUnit, byID = NULL, neighbor){
+  gid3 <- byID
+  if (is_null(byID)) {
+    gid3 <- mapData[which(mapData$NAME_3 == adminUnit), ]$GID_3
+  }
+  aDF <- NULL
+  if (is_null(byID)) {
+    aDF <- mapData[which(mapData$NAME_3 == adminUnit), ]
+  } else {
+    aDF <- mapData[which(mapData$GID_3 == byID), ]
+  }
   for (i in 1:length(neighbor[gid3, ])) {
     if (neighbor[gid3, i] == TRUE) {
       b <- mapData[which(mapData$GID_3 == rownames(neighbor)[i]), ]
@@ -418,7 +426,7 @@ PlotNeighborsWithTurnout <- function(mapData, adminUnit, centr) {
     labs(title = paste("2021 Albanian parliamentary elections: \n",
                        "Turnout heatmap for", adminUnit)) +
     geom_text(data = centr, 
-              aes(label = paste(AdministrativeUnit, "\n", 
+              aes(label = paste(str_to_title(AdministrativeUnit), ": ", 
                                 round(pTurnout, 4) * 100, "%", sep = ""), 
                   x = c1, y = c2)) +
     coord_fixed(1.5) +
