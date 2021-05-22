@@ -383,13 +383,58 @@ CompareTurnouts <- function(vecData, district, whichTest) {
 # Given map data, an admin unit, return neighbors of that unit
 GetNeighbors <- function(mapData, adminUnit, neighbor){
   gid3 <- mapData[which(mapData$NAME_3 == adminUnit), ]$GID_3
-  a <- mapData[which(mapData$NAME_3 == adminUnit), ]
+  aDF <- mapData[which(mapData$NAME_3 == adminUnit), ]
   for (i in 1:length(neighbor[gid3, ])) {
     if (neighbor[gid3, i] == TRUE) {
       b <- mapData[which(mapData$GID_3 == rownames(neighbor)[i]), ]
-      a <- rbind(a, b)
+      aDF <- rbind(aDF, b)
     }
   }
   
-  return (a)
+  return (aDF)
+}
+
+# Given neighbor map data of the adminUnit, plot the unit + neighbors
+# in a turnout heatmap
+PlotNeighborsWithTurnout <- function(mapData, adminUnit, centr) {
+  minT <- min(mapData$pTurnout)
+  maxT <- max(mapData$pTurnout)
+  abF <- fortify(mapData)
+  abF <- inner_join(abF, mapData@data, by = c("id" = "GID_3"))
+  trnout <- abF$pTurnout
+  gg <- ggplot() + 
+    geom_polygon(data = abF, aes(x = long, 
+                                 y = lat, 
+                                 group = group,
+                                 fill = trnout), 
+                 color = "gray", size = 0.2) +
+    scale_fill_distiller(name="Turnout %-age\n", 
+                         palette = "Reds",
+                         trans = "reverse",
+                         guide = "colorbar",
+                         #  breaks = scales::pretty_breaks(n = 3),
+                         breaks = c(minT, (maxT + minT)/2, maxT)
+    ) +
+    labs(title = paste("2021 Albanian parliamentary elections: \n",
+                       "Turnout heatmap for", adminUnit)) +
+    geom_text(data = centr, 
+              aes(label = paste(AdministrativeUnit, "\n", 
+                                round(pTurnout, 4) * 100, "%", sep = ""), 
+                  x = c1, y = c2)) +
+    coord_fixed(1.5) +
+    theme(#aspect.ratio = 1,
+      legend.direction = "vertical",
+      legend.position = "right",
+      panel.grid.minor = element_blank(),
+      panel.grid.major = element_blank(),
+      panel.background = element_blank(),
+      plot.background = element_blank(),
+      axis.line = element_blank(),
+      axis.text.x = element_blank(),
+      axis.text.y = element_blank(),
+      axis.ticks = element_blank(),
+      axis.title.x = element_blank(),
+      axis.title.y = element_blank())
+  
+  return (gg)
 }

@@ -60,7 +60,7 @@ auResults <- pResults %>%
 
 # ---- Load the map of Albania
 albania  <- raster::getData("GADM", country = 'ALB', level = 3)
-view(albania)
+#view(albania)
 write_csv(as.data.frame(albania), here("out/GADM_au.csv"))
 #plot(albania[which(albania$GID_3 == "ALB.11.2.15_1"), ])
 #plot(albania)
@@ -88,27 +88,17 @@ bushatBarbullush_data <- unique(albania@data[ , c("NAME_1", "NAME_2", "NAME_3", 
 rownames(bushatBarbullush_data) <- bushatBarbullush_data$GID_3
 # complete merge via sp into a new gadm tibble to use in the analysis
 albania_wrangled <- SpatialPolygonsDataFrame(bushatBarbullush_sp, bushatBarbullush_data) 
-view(albania_wrangled) # map includes the four water bodies, which can be ignored
+#view(albania_wrangled) # map includes the four water bodies, which can be ignored
 
 # The 11 subdivisions of Tirana do not exist on GADM - create the polygons
 # @TODO
 
-# ----
-# build neigborhood matrix by gadm GIDs (requires library rgeos)
-neighbors <- gTouches(albania_wrangled, byid = TRUE)
-# view(neighbors)
-
-# Given an administrative unit, fetch its GID_3 to extract its neighbors, e.g.:
-a <- GetNeighbors(albania_wrangled, "Tiranë", neighbors)
-plot(a)
-
 
 ###############################
-# ---- Voter/ Turnout analysis
+# ---- PLOT VOTER TURNOUT
 ###############################
 
 # ---- 
-# Plot voter turnout
 # First, merge the 11 sub-divisions of Tirane into one one admin unit
 auMerged <- data.frame(auResults$District,
                        auResults$Municipality,
@@ -184,28 +174,28 @@ colnames(auTurnout)[colnames(auTurnout) ==
 #view(ab)
 ab <- subset(albania_wrangled, NAME_3 != "Inland Water Body")
 # join turnout results to the ab polygon data for the heatmap plot
-ab@data <- inner_join(ab@data, auTurnout, by = c("GID_3" = "MappingID"))
-
+ab@data <- inner_join(ab@data, auTurnout, by = c("GID_3" = "MappingID"),  )
 # RGB plot - since the min and max turnout form a range 73..227, 
 # scale it to 0..255 for a better range of rgb coloring:
 minT <- min(ab$pTurnout)
 maxT <- max(ab$pTurnout)
 minC <- 0.02
 maxC <- 0.98
-plot(ab, 
-     col = rgb(255, 
-      (1 - ((ab$pTurnout - minT) / (maxT - minT) * (maxC - minC) + minC)) * 255, 
-      (1 - ((ab$pTurnout - minT) / (maxT - minT) * (maxC - minC) + minC)) * 255,
-      alpha = 230,
-      maxColorValue =  255
-      ), 
-     border = 1, lwd = 0.35,
-     main = "2021 Albanian parliamentary elections: \nTurnout heatmap")
+# plot(ab,
+#      col = rgb(255,
+#       (1 - ((ab$pTurnout - minT) / (maxT - minT) * (maxC - minC) + minC)) * 255,
+#       (1 - ((ab$pTurnout - minT) / (maxT - minT) * (maxC - minC) + minC)) * 255,
+#       alpha = 230,
+#       maxColorValue =  255
+#       ),
+#      border = 1, lwd = 0.35,
+#      main = "2021 Albanian parliamentary elections: \nTurnout heatmap")
 
 # plot in ggplot2 for more features
-abF <- fortify(ab)
+abF <- NULL
+abF <- fortify(ab, region = "GID_3")
 abF <- inner_join(abF, ab@data, by = c("id" = "GID_3"))
-trnout <- abF$pTurnout.y
+trnout <- abF$pTurnout
 ggplot() + 
   geom_polygon(data = abF, aes(x = long, 
                                y = lat, 
@@ -234,3 +224,34 @@ ggplot() +
         axis.title.x = element_blank(),
         axis.title.y = element_blank())
 
+# ----
+# Plot a neighborhood of administrative units as a visual for the 
+# voter/ turnout analysis for polling-station voter manipulation
+# Simple plot:
+# ----
+# build neigborhood matrix by gadm GIDs (requires library rgeos)
+# for this to work, include the full albania_wrangled map with the inland waters
+# otherwise, I find there's a bug with polygons being different administrative
+# units than the ones expected.
+neighbors <- gTouches(albania_wrangled, byid = TRUE)
+# view(neighbors)
+
+view(albania_wrangled@data)
+# get neighbors of an admin unit & plot after joining with the auTurnout tibble
+# note: for the albania_wrangled tibble, use the correpsonding admin unit name,
+# which may be different from the name in the ngh tibble (mapping differences)
+ngh <- GetNeighbors(albania_wrangled, "Tërpan", neighbors)
+ngh@data <- inner_join(ngh@data, auTurnout, by = c("GID_3" = "MappingID"),  )
+# get center points of the polygons; the row IDs are the GID_3 IDs:
+centers <- as.data.frame(coordinates(ngh))
+centers <- cbind(centers, rownames(centers))
+names(centers) = c("c1", "c2", "cid")
+centers <- inner_join(centers, auTurnout, by = c("cid" = "MappingID"))
+# plot with centroids
+plotAU <- PlotNeighborsWithTurnout(ngh, "Terpan", centers)
+plotAU
+
+
+################################
+# Voter/ Turnout analysis
+################################
