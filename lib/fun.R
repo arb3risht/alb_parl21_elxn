@@ -328,7 +328,7 @@ CompareTurnouts <- function(vecData, district, whichTest) {
     # Chi-sq 2x2 test
     m = matrix(c(tW, nW - tW, tM, nM - tM), nrow = 2)
     rs <- chisq.test(m, correct = FALSE)
-  } else {
+  } else if (whichTest == 4) {
     # store all tests in a list
     t1 <- paste("Prop Test:\n", 
                 prop.test(x = c(tW, tM), n = c(nW, nM), correct = FALSE))
@@ -345,6 +345,8 @@ CompareTurnouts <- function(vecData, district, whichTest) {
                      correct = FALSE))
     
     rs = list(t1, t2, t3)
+  } else {
+    rs <- t.test(vecData$pVotingWomen, vecData$pVotingMen, alternative="two.sided", var.equal=FALSE)
   }
   
 # 
@@ -425,10 +427,11 @@ PlotNeighborsWithTurnout <- function(mapData, adminUnit, centr) {
     ) +
     labs(title = paste("2021 Albanian parliamentary elections: \n",
                        "Turnout heatmap for", adminUnit)) +
+    geom_point(data = centr, aes(x = c1, y = c2), color = "yellow", size = 3) +
     geom_text(data = centr, 
               aes(label = paste(str_to_title(AdministrativeUnit), ": ", 
                                 round(pTurnout, 4) * 100, "%", sep = ""), 
-                  x = c1, y = c2)) +
+                  x = c1, y = c2 + 0.006)) +
     coord_fixed(1.5) +
     theme(#aspect.ratio = 1,
       legend.direction = "vertical",
