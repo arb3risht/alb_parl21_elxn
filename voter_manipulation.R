@@ -4,6 +4,7 @@
 # CC BY-SA. W.A. Boriçi, 2021. Contact: arberisht@gmail.com. 
 # Full license terms at https://creativecommons.org/licenses/by-sa/4.0/.
 
+smearFile <- here("out/smear_PS.csv")
 
 ###############################
 # ---- DATA WRANGLING
@@ -260,23 +261,23 @@ plotAU
 ################################
 
 # Univariate histograms:
-hist(partyVotesP$pPS, breaks = "FD", freq = FALSE, col = "orange",
+hist(fPartyVotes$pPS, breaks = "FD", freq = FALSE, col = "orange",
      main = paste("Histogram of PS vote share"),  
      xlab = "PS vote share")
-lines(density(partyVotesP$pPS), col = "navy", lwd = 2)
-rug(partyVotesP$pPS, col = "gray")
+lines(density(fPartyVotes$pPS), col = "navy", lwd = 2)
+rug(fPartyVotes$pPS, col = "gray")
 
-hist(partyVotesP$pTurnout, breaks = "FD", freq = FALSE, col = "#56bd70",
+hist(fPartyVotes$pTurnout, breaks = "FD", freq = FALSE, col = "#56bd70",
      main = paste("Histogram of turnout rates"),
      xlab = "Turnout rate")
-lines(density(partyVotesP$pTurnout), col = "navy", lwd = 2)
-rug(partyVotesP$pTurnout, col = "gray")
+lines(density(fPartyVotes$pTurnout), col = "navy", lwd = 2)
+rug(fPartyVotes$pTurnout, col = "gray")
 
 
 # Plot the PS vote %-age vs. turnout %-age for all administrative units
 # in a 2D histogram contour heat-map:
 view(fPartyVotes)
-ggplot(fPartyVotes, aes(pTurnout, pPS)) +
+gg <- ggplot(fPartyVotes, aes(pTurnout, pPS)) +
   geom_bin2d() +
   scale_fill_gradientn(colors = c("#0a044d", "green", "yellow", "red")) +
   geom_density2d(color = "white") +
@@ -296,7 +297,24 @@ ggplot(fPartyVotes, aes(pTurnout, pPS)) +
     plot.background = element_blank()
   )
 
-
+smears <- subset(gg$data, 
+                 pTurnout > 0.3 & pTurnout < 0.6 & pPS > 0.6 & pPS < 0.75 | 
+                 pTurnout > 0.5 & pTurnout < 0.6 & pPS > 0.57 & pPS < 0.65 | 
+                 pTurnout > 0.57 & pTurnout < 0.62 & pPS > 0.47 & pPS < 0.62) %>%
+  dplyr::select(District, 
+                Municipality, 
+                AdministrativeUnit, 
+                PollingStation, 
+                pTurnout, 
+                pPS, 
+                PS)
+    
+view(smears)
+sum(smears$PS)
+# Remove Kukes, Lezhe, Shkoder as they add up to a minority of 11 stations
+smears <- subset(smears, District != "Kukes" & District != "Lezhe" & District != "Shkoder")
+# print the final smear list for reference:
+write_csv(smears, smearFile, na = "NA", append = FALSE)
 
 # Berat polling stations contested as per the news report at
 # https://exit.al/en/2021/05/17/albanian-cec-opens-ballot-boxes-to-check-for-evidence-of-vote-rigging/
