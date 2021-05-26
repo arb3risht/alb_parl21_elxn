@@ -268,6 +268,40 @@ for (i in 1:length(votesByDistrict$District)) {
 
 view(resTDiff)
 
+# Because the above analysis assumes simple random samples and includes
+# no knowledge of confidence intervals for population estimates, let's try
+# bootstrapping the 95% C.I. for women and men turnouts using fPartyVotes:
+
+fun.stat <- function(vecData, idx){
+  
+  vd <- vecData[idx]
+  
+  return(mean(vd))
+}
+set.seed(42)
+
+# Change the district name to bootstrap turnout data for that district
+dataFreq <- subset(fPartyVotes, District=="Kukes")
+#view(dataFreq)
+
+womenBtstr <- boot(data = dataFreq$pVotingWomen, 
+                   statistic = fun.stat, 
+                   R = 1000)
+menBtstr <- boot(data =  dataFreq$pVotingMen, 
+                 statistic = fun.stat, 
+                 R = 1000)
+# plot(womenBtstr)
+# plot(menBtstr)
+
+
+# Bootstrap the CI's at 95%:
+boot.ci(boot.out = womenBtstr, 
+        type = c("norm", "basic",
+                 "perc"))
+boot.ci(boot.out = menBtstr, 
+        type = c("norm", "basic",
+                 "perc"))
+
 #################################################################
 # Plot some historical turnout data as time series, where available
 # ----

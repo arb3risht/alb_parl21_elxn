@@ -24,6 +24,7 @@ library(rgeos)
 library(rgdal)
 library(sp)
 library(maptools)
+library(boot) # for bootstrapping confidence intervals for population estimates
 
 # Load library of functions
 source(file = here("lib/fun.R"))
