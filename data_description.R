@@ -301,7 +301,6 @@ qic(partyVotesP$pPD, chart="i", agg.fun = c("mean"),
     ylab = "Vote Share",
     print.summary = TRUE)
 
-
 ################################################
 # Process raw granular data into proportions and 
 # compute other variables, such as turnout %-age
@@ -407,4 +406,5 @@ names(fPartyVotes) <- c("District",
 write_csv(fPartyVotes, partyVotesRawByPollingStation, na = "NA", append = FALSE)
 
 # Remove any NA records from further statistical analyses
+fPartyVotesAll <- fPartyVotes # save a copy for all 5199 stations just in case
 fPartyVotes %>% drop_na() -> fPartyVotes

@@ -1,6 +1,6 @@
 # voter_manipulation.R
 # Analyze small poll stations for voter manipulation by examining the
-# voter/turnout bivariate distributions for potential signs of rigging.
+# vote/ turnout bivariate distributions for potential signs of rigging.
 # CC BY-SA. W.A. Boriçi, 2021. Contact: arberisht@gmail.com. 
 # Full license terms at https://creativecommons.org/licenses/by-sa/4.0/.
 
@@ -256,8 +256,47 @@ plotAU
 # in each neighboring administrative unit.
 
 ################################
-# Voter/ Turnout analysis
+# Vote/ Turnout analysis
 ################################
+
+# Univariate histograms:
+hist(partyVotesP$pPS, breaks = "FD", freq = FALSE, col = "orange",
+     main = paste("Histogram of PS vote share"),  
+     xlab = "PS vote share")
+lines(density(partyVotesP$pPS), col = "navy", lwd = 2)
+rug(partyVotesP$pPS, col = "gray")
+
+hist(partyVotesP$pTurnout, breaks = "FD", freq = FALSE, col = "#56bd70",
+     main = paste("Histogram of turnout rates"),
+     xlab = "Turnout rate")
+lines(density(partyVotesP$pTurnout), col = "navy", lwd = 2)
+rug(partyVotesP$pTurnout, col = "gray")
+
+
+# Plot the PS vote %-age vs. turnout %-age for all administrative units
+# in a 2D histogram contour heat-map:
+view(fPartyVotes)
+ggplot(fPartyVotes, aes(pTurnout, pPS)) +
+  geom_bin2d() +
+  scale_fill_gradientn(colors = c("#0a044d", "green", "yellow", "red")) +
+  geom_density2d(color = "white") +
+  labs(title = paste("2021 Albanian parliamentary elections: \n",
+                     "Turnout vs. PS vote %-age fingerprint"), 
+       fill = "Density\n") +
+  xlab("Turnout %-age") + 
+  ylab("PS vote %-age") +
+  xlim(c(0, 1)) +
+  ylim(c(0, 1)) +
+  theme(#aspect.ratio = 1,
+    legend.direction = "vertical",
+    legend.position = "right",
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.background = element_rect(fill = "#0a044d"),
+    plot.background = element_blank()
+  )
+
+
 
 # Berat polling stations contested as per the news report at
 # https://exit.al/en/2021/05/17/albanian-cec-opens-ballot-boxes-to-check-for-evidence-of-vote-rigging/
