@@ -449,3 +449,51 @@ PlotNeighborsWithTurnout <- function(mapData, adminUnit, centr) {
   
   return (gg)
 }
+
+
+# Given neighbor map data of the adminUnit, plot the unit + neighbors
+# in a PS vs. Others heatmap, where PS votes are positive and 
+# others' votes are negative
+PlotNeighborsWithVoteShares <- function(mapData, adminUnit, centr) {
+  abF <- fortify(mapData)
+  abF <- inner_join(abF, mapData@data, by = c("id" = "GID_3"))
+  trnout <- abF$pPS
+  gg <- ggplot() + 
+    geom_polygon(data = abF, aes(x = long, 
+                                 y = lat, 
+                                 group = group,
+                                 fill = trnout), 
+                 color = "gray", size = 0.2) +
+    scale_fill_distiller(name = "Mean PS vote share\n", 
+                         palette = "Reds",
+                         trans = "reverse",
+                         guide = "colorbar",
+                         breaks = scales::pretty_breaks(n = 4)
+    ) +
+    labs(title = paste("2021 Albanian parliamentary elections: \n",
+                       "Turnout (t) & PS vote (v) heatmap for ", adminUnit,
+                       " and neighbors", sep = "")) +
+    geom_point(data = centr, aes(x = c1, y = c2), color = "yellow", size = 3) +
+    geom_text(data = centr, 
+              aes(label = paste(str_to_title(AdministrativeUnit), "\n", 
+                                "t: ", round(pTurnout, 4) * 100, "%\n",
+                                "v: ", round(pPS, 4) * 100, "%\n",
+                                sep = ""), 
+                  x = c1, y = c2 + 0.006)) +
+    coord_fixed(1.5) +
+    theme(#aspect.ratio = 1,
+      legend.direction = "vertical",
+      legend.position = "right",
+      panel.grid.minor = element_blank(),
+      panel.grid.major = element_blank(),
+      panel.background = element_blank(),
+      plot.background = element_blank(),
+      axis.line = element_blank(),
+      axis.text.x = element_blank(),
+      axis.text.y = element_blank(),
+      axis.ticks = element_blank(),
+      axis.title.x = element_blank(),
+      axis.title.y = element_blank())
+  
+  return (gg)
+}

@@ -25,6 +25,7 @@ library(rgdal)
 library(sp)
 library(maptools)
 library(boot) # for bootstrapping confidence intervals for population estimates
+library(MVN) # for multivariate analysis of voter manipulation
 
 # Load library of functions
 source(file = here("lib/fun.R"))

@@ -241,7 +241,7 @@ view(albania_wrangled@data)
 # get neighbors of an admin unit & plot after joining with the auTurnout tibble
 # note: for the albania_wrangled tibble, use the correpsonding admin unit name,
 # which may be different from the name in the ngh tibble (mapping differences)
-ngh <- GetNeighbors(albania_wrangled, "Lumas", "ALB.1.1.4_1", neighbors)
+ngh <- GetNeighbors(albania_wrangled, "Berat", "ALB.1.1.1_1", neighbors)
 ngh@data <- inner_join(ngh@data, auTurnout, by = c("GID_3" = "MappingID"),  )
 # get center points of the polygons; the row IDs are the GID_3 IDs:
 centers <- as.data.frame(coordinates(ngh))
@@ -249,7 +249,7 @@ centers <- cbind(centers, rownames(centers))
 names(centers) = c("c1", "c2", "cid")
 centers <- inner_join(centers, auTurnout, by = c("cid" = "MappingID"))
 # plot with centroids
-plotAU <- PlotNeighborsWithTurnout(ngh, "Lumas", centers)
+plotAU <- PlotNeighborsWithTurnout(ngh, "Berat", centers)
 plotAU
 
 # TODO:
@@ -297,6 +297,39 @@ gg <- ggplot(fPartyVotes, aes(pTurnout, pPS)) +
     plot.background = element_blank()
   )
 
+# Plot the cumulative vote %-age versus turnout (s-curve is expected):
+cumulTV <- data.frame(fPartyVotes$pTurnout, fPartyVotes$pPS)
+names(cumulTV) <- c("t", "v")
+ggplot(cumulTV, aes(x = t, y = v)) + 
+  stat_ecdf() +
+  xlab("Turnout %-age") +
+  ylab("Cumulative vote %-age")
+# Result: the s-curve looks regular without any irregularities in shape.
+
+
+# ----
+# Test for multivariate normality using MVN's Henze-Zirkler, 
+# after detecting Mahalanobis outliers
+# use 383 admin units as sample, since tests work for [3, 5000] samples sizes:
+normTV <- data.frame(partyVotesP$pTurnout, partyVotesP$pPS)
+result <- mvn(data = normTV, mvnTest = "hz", multivariateOutlierMethod = "quan")
+result$multivariateNormality
+result <- mvn(normTV, mvnTest = "hz", multivariatePlot = "persp")
+normTV <- data.frame(partyVotesP$pTurnout, partyVotesP$pPD)
+result <- mvn(data = normTV, mvnTest = "hz", multivariateOutlierMethod = "quan")
+result$multivariateNormality
+result <- mvn(normTV, mvnTest = "hz", multivariatePlot = "persp")
+normTV <- data.frame(partyVotesP$pTurnout, partyVotesP$pOP)
+result <- mvn(data = normTV, mvnTest = "hz", multivariateOutlierMethod = "quan")
+result$multivariateNormality
+result <- mvn(normTV, mvnTest = "hz", multivariatePlot = "persp")
+normTV <- data.frame(partyVotesP$pTurnout, partyVotesP$pInvalid)
+result <- mvn(data = normTV, mvnTest = "hz", multivariateOutlierMethod = "quan")
+result$multivariateNormality
+result <- mvn(normTV, mvnTest = "hz", multivariatePlot = "persp")
+
+# Fetch suspected regions from the 2D chart
+# Chart located here("out/PS-fingerprint-smears.png")
 smears <- subset(gg$data, 
                  pTurnout > 0.3 & pTurnout < 0.6 & pPS > 0.6 & pPS < 0.75 | 
                  pTurnout > 0.5 & pTurnout < 0.6 & pPS > 0.57 & pPS < 0.65 | 
@@ -308,18 +341,50 @@ smears <- subset(gg$data,
                 pTurnout, 
                 pPS, 
                 PS)
-    
+
 view(smears)
 sum(smears$PS)
 # Remove Kukes, Lezhe, Shkoder as they add up to a minority of 11 stations
-smears <- subset(smears, District != "Kukes" & District != "Lezhe" & District != "Shkoder")
+smears <- subset(smears, 
+                 District != "Kukes" & 
+                   District != "Lezhe" & 
+                   District != "Shkoder")
 # print the final smear list for reference:
 write_csv(smears, smearFile, na = "NA", append = FALSE)
 
+# ----
+# Berat:
+view(distinct(subset(smears, select = c("AdministrativeUnit"), 
+                     District == "Berat")))
 # Berat polling stations contested as per the news report at
 # https://exit.al/en/2021/05/17/albanian-cec-opens-ballot-boxes-to-check-for-evidence-of-vote-rigging/
+# in the following administrative units match the smear region for Berat above
 # Ura Vajgurore, Poshnje, Kutalli, Cukalat, Zhepe, Vendreshe, Qender - Skrapar,
 # Potom, Leshnje, Gjerbes, Corovode, Cepan, Bogove, Vertop, Terpan, Polican,
 # Perondi, Lumas, Kucove, Kozare, Velabisht, Sinje, Roshnik, Otllak, Berat.
-# Can map and use these as an illustration for the analysis
+
+berat <- subset(smears, District == "Berat") %>%
+  group_by(District, Municipality, AdministrativeUnit) %>%
+  summarize(pPS = mean(pPS))
+
+view(berat)
+view(albania_wrangled@data)
+# get neighbors of an admin unit & plot after joining with the auTurnout tibble
+# note: for the albania_wrangled tibble, use the correpsonding admin unit name,
+# which may be different from the name in the ngh tibble (mapping differences)
+ngh <- GetNeighbors(albania_wrangled, "Terpan", "ALB.1.1.9_1", neighbors)
+ngh@data <- inner_join(ngh@data, auTurnout, by = c("GID_3" = "MappingID"),  )
+ngh@data <- inner_join(ngh@data, berat, by = c("AdministrativeUnit" = "AdministrativeUnit"))
+# get center points of the polygons; the row IDs are the GID_3 IDs:
+centers <- as.data.frame(coordinates(ngh))
+centers <- cbind(centers, rownames(centers))
+names(centers) = c("c1", "c2", "cid")
+centers <- inner_join(centers, auTurnout, by = c("cid" = "MappingID"))
+centers <- inner_join(centers, berat, by = c("AdministrativeUnit" = "AdministrativeUnit"))
+# plot with centroids
+plotAU <- PlotNeighborsWithVoteShares(ngh, "Terpan", centers)
+plotAU
+
+
+# ----
 
