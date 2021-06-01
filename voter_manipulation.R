@@ -55,7 +55,8 @@ auResults <- pResults %>%
             ADR = sum(ADR),
             LN = sum(LN),
             PS = sum(PS),
-            Other = sum(Other)
+            Other = sum(Other),
+            .groups = 'drop'
   )
 # view(auResults)
 
@@ -304,7 +305,8 @@ ggplot(cumulTV, aes(x = t, y = v)) +
   stat_ecdf() +
   xlab("Turnout %-age") +
   ylab("Cumulative vote %-age")
-# Result: the s-curve looks regular without any irregularities in shape.
+# Result: the s-curve looks regular without any irregularities in shape,
+# whether at the polling-station level or the admin-unit level.
 
 
 # ----
@@ -340,7 +342,10 @@ smears <- subset(gg$data,
                 PollingStation, 
                 pTurnout, 
                 pPS, 
-                PS)
+                PS,
+                pPD,
+                PD,
+                ValidBallots)
 
 view(smears)
 sum(smears$PS)
@@ -363,28 +368,60 @@ view(distinct(subset(smears, select = c("AdministrativeUnit"),
 # Potom, Leshnje, Gjerbes, Corovode, Cepan, Bogove, Vertop, Terpan, Polican,
 # Perondi, Lumas, Kucove, Kozare, Velabisht, Sinje, Roshnik, Otllak, Berat.
 
-berat <- subset(smears, District == "Berat") %>%
+# Store polling stations in a tibble
+berat <- subset(smears, District == "Berat") 
+
+# Aggregate polling station data into administrative units:
+beratAU <- berat %>%
   group_by(District, Municipality, AdministrativeUnit) %>%
-  summarize(pPS = mean(pPS))
+  summarize(pPS = mean(pPS),
+            .groups = 'drop')
 
 view(berat)
 view(albania_wrangled@data)
 # get neighbors of an admin unit & plot after joining with the auTurnout tibble
 # note: for the albania_wrangled tibble, use the correpsonding admin unit name,
 # which may be different from the name in the ngh tibble (mapping differences)
-ngh <- GetNeighbors(albania_wrangled, "Terpan", "ALB.1.1.9_1", neighbors)
+ngh <- GetNeighbors(albania_wrangled, "Berat", "ALB.1.1.1_1", neighbors)
 ngh@data <- inner_join(ngh@data, auTurnout, by = c("GID_3" = "MappingID"),  )
-ngh@data <- inner_join(ngh@data, berat, by = c("AdministrativeUnit" = "AdministrativeUnit"))
+ngh@data <- inner_join(ngh@data, beratAU, by = c("AdministrativeUnit" = "AdministrativeUnit"))
 # get center points of the polygons; the row IDs are the GID_3 IDs:
 centers <- as.data.frame(coordinates(ngh))
 centers <- cbind(centers, rownames(centers))
 names(centers) = c("c1", "c2", "cid")
 centers <- inner_join(centers, auTurnout, by = c("cid" = "MappingID"))
-centers <- inner_join(centers, berat, by = c("AdministrativeUnit" = "AdministrativeUnit"))
+centers <- inner_join(centers, beratAU, by = c("AdministrativeUnit" = "AdministrativeUnit"))
 # plot with centroids
-plotAU <- PlotNeighborsWithVoteShares(ngh, "Terpan", centers)
+plotAU <- PlotNeighborsWithVoteShares(ngh, "Berat", centers)
 plotAU
 
 
 # ----
+# Info-theoretic analysis using a normalized distance metric
+qvTV <- berat
+# group & summarize by admin unit
+# Group parties other than PD or PS into a new group, OP,
+# which makes the distance metric computable
+qvTV <- within(qvTV, 
+               OP <- ValidBallots - PS - PD)
+qvTV <- within(qvTV,
+               pOP <- 1.0 - pPS - pPD)
+# Various polling stations belonging to the same voting zone need to be grouped
+# For instance: P-33111 and P-33112 should be grouped under P-3311
 
+divergenceSet <- data.frame()
+n <- length(qvTV$pPS)
+for (i in 1:(n-1)){
+  A <- qvTV[i, ] %>% dplyr::select(pPS, pPD, pOP)
+  for (j in (i+1):n) {
+    B <- qvTV[j, ] %>% dplyr::select(pPS, pPD, pOP)
+    rw <- data.frame(qvTV[i, ]$PollingStation, 
+                           qvTV[j, ]$PollingStation,
+                           Divergence(A, B, metric = 1))
+    names(rw) <- c("X", "Y", "D")
+    divergenceSet <- as.data.frame(rbind(divergenceSet, rw))
+  }
+}
+
+# Examine neghiboring polling stations manually
+subset.data.frame(divergenceSet, X == "P-3339" & Y == "P-3345")

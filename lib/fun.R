@@ -497,3 +497,17 @@ PlotNeighborsWithVoteShares <- function(mapData, adminUnit, centr) {
   
   return (gg)
 }
+
+
+# Universal information-theoretic distances:
+# metric = 0: normalized distance
+#   1 - (mutual information)/(joint entropy)
+#   Source: https://arxiv.org/pdf/q-bio/0311039.pdf
+# metric = 1: symmetric Kullback-Leibler distance
+Divergence <- function(X, Y, cX = NULL, cY = NULL, metric = 1) {
+  if (metric == 0) {
+    return (1.0 - mi.empirical(rbind(cX, cY)) / Entropy(X, Y))
+  } else {
+    return (KL.empirical(X, Y) + KL.empirical(Y, X))
+  }
+}

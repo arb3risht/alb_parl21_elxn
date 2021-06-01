@@ -15,7 +15,7 @@ library(Matching) # for ks.boot (discrete-sample K-S test)
 library(fitdistrplus) # for determining possible fitting distributions
 library(qicharts2) # for control charts for our hypothesis tests
 # map-related:
-library(ggmap) # remember to cite on any articles via citation("ggmap")
+#library(ggmap) # remember to cite on any articles via citation("ggmap")
 library(maps)
 library(mapdata)
 library(GADMTools)
@@ -26,6 +26,7 @@ library(sp)
 library(maptools)
 library(boot) # for bootstrapping confidence intervals for population estimates
 library(MVN) # for multivariate analysis of voter manipulation
+library(entropy)
 
 # Load library of functions
 source(file = here("lib/fun.R"))
