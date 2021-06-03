@@ -5,6 +5,8 @@
 # Full license terms at https://creativecommons.org/licenses/by-sa/4.0/.
 
 smearFile <- here("out/smear_PS.csv")
+divergenceSetFileBerat <- here("out/KL_Berat.csv")
+divergenceSetFileDurres <- here("out/KL_Durres.csv")
 
 ###############################
 # ---- DATA WRANGLING
@@ -357,8 +359,7 @@ smears <- subset(smears,
 # print the final smear list for reference:
 write_csv(smears, smearFile, na = "NA", append = FALSE)
 
-# ----
-# Berat:
+# Berat Suspects ----
 view(distinct(subset(smears, select = c("AdministrativeUnit"), 
                      District == "Berat")))
 # Berat polling stations contested as per the news report at
@@ -397,24 +398,25 @@ plotAU
 
 
 # ----
-# Info-theoretic analysis using a normalized distance metric
-qvTV <- berat
+# Info-theoretic analysis using a normalized distance metric for 
+# neighboring admin units
+qvTV <- inner_join(ngh@data, berat, by = c("AdministrativeUnit" = "AdministrativeUnit"))
 # group & summarize by admin unit
 # Group parties other than PD or PS into a new group, OP,
 # which makes the distance metric computable
 qvTV <- within(qvTV, 
                OP <- ValidBallots - PS - PD)
 qvTV <- within(qvTV,
-               pOP <- 1.0 - pPS - pPD)
+               pOP <- 1.0 - pPS.y - pPD)
 # Various polling stations belonging to the same voting zone need to be grouped
 # For instance: P-33111 and P-33112 should be grouped under P-3311
 
 divergenceSet <- data.frame()
-n <- length(qvTV$pPS)
+n <- length(qvTV$pPS.y)
 for (i in 1:(n-1)){
-  A <- qvTV[i, ] %>% dplyr::select(pPS, pPD, pOP)
+  A <- qvTV[i, ] %>% dplyr::select(pPS.y, pPD, pOP)
   for (j in (i+1):n) {
-    B <- qvTV[j, ] %>% dplyr::select(pPS, pPD, pOP)
+    B <- qvTV[j, ] %>% dplyr::select(pPS.y, pPD, pOP)
     rw <- data.frame(qvTV[i, ]$PollingStation, 
                            qvTV[j, ]$PollingStation,
                            Divergence(A, B, metric = 1))
@@ -423,5 +425,8 @@ for (i in 1:(n-1)){
   }
 }
 
-# Examine neghiboring polling stations manually
-subset.data.frame(divergenceSet, X == "P-3339" & Y == "P-3345")
+view(divergenceSet)
+write_csv(divergenceSet, divergenceSetFileBerat, append = FALSE, na = "NA")
+
+# Examine neighboring polling stations manually
+subset.data.frame(divergenceSet, X %in% "P-33131" & Y %in% "P-3316")
