@@ -417,10 +417,12 @@ for (i in 1:(n-1)){
   A <- qvTV[i, ] %>% dplyr::select(pPS.y, pPD, pOP)
   for (j in (i+1):n) {
     B <- qvTV[j, ] %>% dplyr::select(pPS.y, pPD, pOP)
-    rw <- data.frame(qvTV[i, ]$PollingStation, 
-                           qvTV[j, ]$PollingStation,
-                           Divergence(A, B, metric = 1))
-    names(rw) <- c("X", "Y", "D")
+    rw <- data.frame(qvTV[i, ]$AdministrativeUnit,
+                     qvTV[i, ]$PollingStation, 
+                     qvTV[j, ]$AdministrativeUnit,
+                     qvTV[j, ]$PollingStation,
+                     Divergence(A, B, metric = 1))
+    names(rw) <- c("X.AU", "X", "Y.AU", "Y", "D")
     divergenceSet <- as.data.frame(rbind(divergenceSet, rw))
   }
 }
