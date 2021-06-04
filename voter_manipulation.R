@@ -7,6 +7,7 @@
 smearFile <- here("out/smear_PS.csv")
 divergenceSetFileBerat <- here("out/KL_Berat.csv")
 divergenceSetFileDurres <- here("out/KL_Durres.csv")
+divergenceSetFileKatund <- here("out/KL_KatundIRi.csv")
 
 ###############################
 # ---- DATA WRANGLING
@@ -441,6 +442,8 @@ view(distinct(subset(smears, select = c("AdministrativeUnit"),
 
 # Store polling stations in a tibble
 durres <- subset(smears, District == "Durres") 
+# Run analysis having cleared the smearing data
+durres <- subset(gg$data, District == "Durres") 
 
 # Aggregate polling station data into administrative units:
 durresAU <- durres %>%
@@ -453,7 +456,7 @@ view(albania_wrangled@data)
 # get neighbors of an admin unit & plot after joining with the auTurnout tibble
 # note: for the albania_wrangled tibble, use the correpsonding admin unit name,
 # which may be different from the name in the ngh tibble (mapping differences)
-ngh <- GetNeighbors(albania_wrangled, "Durres", "", neighbors)
+ngh <- GetNeighbors(albania_wrangled, "Katund i Ri", "ALB.3.1.4_1", neighbors)
 ngh@data <- inner_join(ngh@data, auTurnout, by = c("GID_3" = "MappingID"),  )
 ngh@data <- inner_join(ngh@data, durresAU, by = c("AdministrativeUnit" = "AdministrativeUnit"))
 # get center points of the polygons; the row IDs are the GID_3 IDs:
@@ -463,7 +466,7 @@ names(centers) = c("c1", "c2", "cid")
 centers <- inner_join(centers, auTurnout, by = c("cid" = "MappingID"))
 centers <- inner_join(centers, durresAU, by = c("AdministrativeUnit" = "AdministrativeUnit"))
 # plot with centroids
-plotAU <- PlotNeighborsWithVoteShares(ngh, "Durres", centers)
+plotAU <- PlotNeighborsWithVoteShares(ngh, "Katund I Ri", centers)
 plotAU
 
 
@@ -498,8 +501,8 @@ for (i in 1:(n-1)){
 }
 
 view(divergenceSet)
-write_csv(divergenceSet, divergenceSetFileDurres, append = FALSE, na = "NA")
+write_csv(divergenceSet, divergenceSetFileKatund, append = FALSE, na = "NA")
 
 # Examine neighboring polling stations manually
-subset.data.frame(divergenceSet, X %in% "P-33131" & Y %in% "P-3316")
+subset.data.frame(divergenceSet, X %in% "P-1432" & Y %in% "P-1518")
 
