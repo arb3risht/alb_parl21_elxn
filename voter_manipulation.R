@@ -1,7 +1,7 @@
 # voter_manipulation.R
 # Analyze small poll stations for voter manipulation by examining the
 # vote/ turnout bivariate distributions for potential signs of rigging.
-# CC BY-SA. W.A. Boriçi, 2021. Contact: arberisht@gmail.com. 
+# CC BY-SA. W.A. Borici, 2021. 
 # Full license terms at https://creativecommons.org/licenses/by-sa/4.0/.
 
 smearFile <- here("out/smear_PS.csv")

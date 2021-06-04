@@ -1,7 +1,7 @@
 # benford.R
 # Checking conformity with Benford's Law of leading and second digits for 
 # reported figures -- party votes and invalid ballots -- at the admin unit.
-# CC BY-SA. W.A. Boriçi, 2021. Contact: arberisht@gmail.com. 
+# CC BY-SA. W.A. Borici, 2021.
 # Full license terms at https://creativecommons.org/licenses/by-sa/4.0/.
 
 

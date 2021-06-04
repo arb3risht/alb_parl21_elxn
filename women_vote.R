@@ -1,6 +1,6 @@
 # women_vote.R
 # Analyze women vote gap & other differences using the 5199 data points.
-# CC BY-SA. W.A. Boriçi, 2021. Contact: arberisht@gmail.com. 
+# CC BY-SA. W.A. Borici, 2021.
 # Full license terms at https://creativecommons.org/licenses/by-sa/4.0/.
 
 districtLevelStats <- here("out/women_men_district.csv")

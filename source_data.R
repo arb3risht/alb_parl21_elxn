@@ -1,6 +1,6 @@
 # source_data.R
 # Load source data from CSV files located in the ./data directory.
-# CC BY-SA. W.A. Boriçi, 2021. Contact: arberisht@gmail.com. 
+# CC BY-SA. W.A. Borici, 2021.
 # Full license terms at https://creativecommons.org/licenses/by-sa/4.0/.
 
 # File locations

@@ -1,7 +1,7 @@
 # main.R
 # The goal of this project is to carry out various analyses on the
 # 2021 Albanian Parliamentary Election data.
-# CC BY-SA. W.A. Boriçi, 2021. Contact: arberisht@gmail.com. 
+# CC BY-SA. W.A. Borici, 2021. 
 # Full license terms at https://creativecommons.org/licenses/by-sa/4.0/.
 
 # Load packages used throughout the project
