@@ -432,3 +432,74 @@ write_csv(divergenceSet, divergenceSetFileBerat, append = FALSE, na = "NA")
 
 # Examine neighboring polling stations manually
 subset.data.frame(divergenceSet, X %in% "P-33131" & Y %in% "P-3316")
+
+# --------
+
+# Durres Suspects ----
+view(distinct(subset(smears, select = c("AdministrativeUnit"), 
+                     District == "Durres")))
+
+# Store polling stations in a tibble
+durres <- subset(smears, District == "Durres") 
+
+# Aggregate polling station data into administrative units:
+durresAU <- durres %>%
+  group_by(District, Municipality, AdministrativeUnit) %>%
+  summarize(pPS = mean(pPS),
+            .groups = 'drop')
+
+view(durres)
+view(albania_wrangled@data)
+# get neighbors of an admin unit & plot after joining with the auTurnout tibble
+# note: for the albania_wrangled tibble, use the correpsonding admin unit name,
+# which may be different from the name in the ngh tibble (mapping differences)
+ngh <- GetNeighbors(albania_wrangled, "Durres", "", neighbors)
+ngh@data <- inner_join(ngh@data, auTurnout, by = c("GID_3" = "MappingID"),  )
+ngh@data <- inner_join(ngh@data, durresAU, by = c("AdministrativeUnit" = "AdministrativeUnit"))
+# get center points of the polygons; the row IDs are the GID_3 IDs:
+centers <- as.data.frame(coordinates(ngh))
+centers <- cbind(centers, rownames(centers))
+names(centers) = c("c1", "c2", "cid")
+centers <- inner_join(centers, auTurnout, by = c("cid" = "MappingID"))
+centers <- inner_join(centers, durresAU, by = c("AdministrativeUnit" = "AdministrativeUnit"))
+# plot with centroids
+plotAU <- PlotNeighborsWithVoteShares(ngh, "Durres", centers)
+plotAU
+
+
+# ----
+# Info-theoretic analysis using a normalized distance metric for 
+# neighboring admin units
+qvTV <- inner_join(ngh@data, durres, by = c("AdministrativeUnit" = "AdministrativeUnit"))
+# group & summarize by admin unit
+# Group parties other than PD or PS into a new group, OP,
+# which makes the distance metric computable
+qvTV <- within(qvTV, 
+               OP <- ValidBallots - PS - PD)
+qvTV <- within(qvTV,
+               pOP <- 1.0 - pPS.y - pPD)
+# Various polling stations belonging to the same voting zone need to be grouped
+# For instance: P-33111 and P-33112 should be grouped under P-3311
+
+divergenceSet <- data.frame()
+n <- length(qvTV$pPS.y)
+for (i in 1:(n-1)){
+  A <- qvTV[i, ] %>% dplyr::select(pPS.y, pPD, pOP)
+  for (j in (i+1):n) {
+    B <- qvTV[j, ] %>% dplyr::select(pPS.y, pPD, pOP)
+    rw <- data.frame(qvTV[i, ]$AdministrativeUnit,
+                     qvTV[i, ]$PollingStation, 
+                     qvTV[j, ]$AdministrativeUnit,
+                     qvTV[j, ]$PollingStation,
+                     Divergence(A, B, metric = 1))
+    names(rw) <- c("X.AU", "X", "Y.AU", "Y", "D")
+    divergenceSet <- as.data.frame(rbind(divergenceSet, rw))
+  }
+}
+
+view(divergenceSet)
+write_csv(divergenceSet, divergenceSetFileDurres, append = FALSE, na = "NA")
+
+# Examine neighboring polling stations manually
+subset.data.frame(divergenceSet, X %in% "P-33131" & Y %in% "P-3316")
+
